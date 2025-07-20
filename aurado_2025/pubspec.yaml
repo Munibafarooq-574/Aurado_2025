@@ -1,0 +1,41 @@
+name: aurado_2025
+description: "A new Flutter project."
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  animated_text_kit: ^4.2.2
+  google_fonts: ^6.1.0
+  provider: ^6.1.2  # For state management
+  flutter_local_notifications: ^17.2.0  # For notifications
+  syncfusion_flutter_charts: ^26.2.11  # For ProgressChart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo.png
+    - assets/character.png
+    - assets/cartoon.png
+    - assets/forget_1.png
+    - assets/forget_2.png
+    - assets/forget_3.png
+    - assets/forget_4.png
+    - assets/Habit.png
+    - assets/health.png
+    - assets/Missed.png
+    - assets/personal.png
+    - assets/shopping.png
+    - assets/signout.png
+    - assets/Today.png
+    - assets/Upcoming.png
+    - assets/work.png
