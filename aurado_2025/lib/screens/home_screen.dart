@@ -29,14 +29,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  String _username = 'Muniba';
+  final String _username = 'Muniba';
 
   Widget _buildDashboard() {
     final List<ChartData> chartData = [
-      ChartData('Today', 40),
-      ChartData('Upcoming', 30),
-      ChartData('Completed', 10),
-      ChartData('Missed', 20),
+      ChartData('Work', 12),
+      ChartData('Personal', 8),
+      ChartData('Shopping', 5),
+      ChartData('Health', 6),
+      ChartData('Habit', 10),
     ];
 
     String initial = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
@@ -48,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top user row
+            // User Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -77,20 +78,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              '$_username 🌸',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                        Text(
+                          'Welcome',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                         ),
-
+                        Text(
+                          '$_username 🌸',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        ),
                       ],
                     ),
                   ],
@@ -151,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 16),
             Text('Pie Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 4),
+            SizedBox(height: 8),
             SizedBox(
               height: 250,
               child: SfCircularChart(
@@ -165,6 +160,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+            SizedBox(height: 16),
+            Text('Bar Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            SizedBox(
+              height: 250,
+              child: SfCartesianChart(
+                primaryXAxis: CategoryAxis(),
+                series: <CartesianSeries>[
+                  ColumnSeries<ChartData, String>(
+                    dataSource: chartData,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    color: Color(0xFF800000),
+                    dataLabelSettings: DataLabelSettings(isVisible: true),
+                  ),
+                ],
+              ),
+            ),
+
           ],
         ),
       ),
@@ -275,11 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : _selectedIndex == 2
               ? 'Notifications'
               : 'Account',
-          style: TextStyle(
-            fontWeight: FontWeight.bold, // 👈 This makes it bold
-            fontSize: 20,
-            color: Colors.black,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
