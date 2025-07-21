@@ -1,6 +1,6 @@
 class ChartData {
-  final String x; // Label (e.g., "Completed" or "Pending")
-  final double y; // Value (e.g., number of completed or pending tasks)
+  final String x;
+  final double y;
 
   ChartData(this.x, this.y);
 }

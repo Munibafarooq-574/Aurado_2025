@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'create_a_task_screen.dart';
 import '../models/chart_data.dart';
 
-class CreateTaskScreen extends StatelessWidget {
-  const CreateTaskScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Create a Task'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Text('This is the Create Task Screen. Add your task creation UI here!'),
-      ),
-    );
-  }
+class Task {
+  final String title;
+  final String category; // Work, Personal, etc.
+  final String status;   // Today, Upcoming, Completed, Missed
+
+  Task({
+    required this.title,
+    required this.category,
+    required this.status,
+  });
 }
 
 class HomeScreen extends StatefulWidget {
@@ -31,14 +27,50 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final String _username = 'Muniba';
 
+  // Sample tasks list
+  final List<Task> tasks = [
+    Task(title: 'Email Client', category: 'Work', status: 'Today'),
+    Task(title: 'Yoga', category: 'Health', status: 'Completed'),
+    Task(title: 'Buy Groceries', category: 'Shopping', status: 'Missed'),
+    Task(title: 'Read Book', category: 'Personal', status: 'Upcoming'),
+    Task(title: 'Walk', category: 'Habit', status: 'Today'),
+    Task(title: 'Project Report', category: 'Work', status: 'Completed'),
+    Task(title: 'Meditate', category: 'Habit', status: 'Upcoming'),
+    Task(title: 'Doctor Appointment', category: 'Health', status: 'Upcoming'),
+    Task(title: 'Laundry', category: 'Personal', status: 'Missed'),
+    Task(title: 'Order Supplies', category: 'Shopping', status: 'Today'),
+  ];
+
+  // Calculate category counts for Bar Chart
+  Map<String, int> getCategoryCounts(List<Task> tasks) {
+    final categories = ['Work', 'Personal', 'Shopping', 'Health', 'Habit'];
+    return {
+      for (var category in categories)
+        category: tasks.where((task) => task.category == category).length
+    };
+  }
+
+  // Calculate status percentages for Pie Chart
+  Map<String, double> getStatusPercentages(List<Task> tasks) {
+    final statusLabels = ['Today', 'Upcoming', 'Completed', 'Missed'];
+    int total = tasks.length;
+    return {
+      for (var status in statusLabels)
+        status: total == 0 ? 0 : (tasks.where((task) => task.status == status).length / total) * 100
+    };
+  }
+
   Widget _buildDashboard() {
-    final List<ChartData> chartData = [
-      ChartData('Work', 12),
-      ChartData('Personal', 8),
-      ChartData('Shopping', 5),
-      ChartData('Health', 6),
-      ChartData('Habit', 10),
-    ];
+    // Prepare chart data dynamically
+    final categoryCounts = getCategoryCounts(tasks);
+    final barChartData = categoryCounts.entries
+        .map((e) => ChartData(e.key, e.value.toDouble())) // convert int to double
+        .toList();
+
+    final statusPercentages = getStatusPercentages(tasks);
+    final pieData = statusPercentages.entries
+        .map((e) => ChartData(e.key, e.value))
+        .toList();
 
     String initial = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
 
@@ -94,7 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CreateTaskScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const CreateTaskScreen(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -103,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Text('Create a Task'),
                 ),
+
               ],
             ),
             SizedBox(height: 16),
@@ -152,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: SfCircularChart(
                 series: <CircularSeries>[
                   PieSeries<ChartData, String>(
-                    dataSource: chartData,
+                    dataSource: pieData,
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
                     dataLabelSettings: DataLabelSettings(isVisible: true),
@@ -169,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 primaryXAxis: CategoryAxis(),
                 series: <CartesianSeries>[
                   ColumnSeries<ChartData, String>(
-                    dataSource: chartData,
+                    dataSource: barChartData,
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
                     color: Color(0xFF800000),
@@ -178,7 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
           ],
         ),
       ),
