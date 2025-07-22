@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import '../main.dart';
+
 
 class CreateTaskScreen extends StatefulWidget {
   const CreateTaskScreen({super.key});
@@ -231,7 +236,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
                     if (pickedTime != null) {
                       // Combine Date + Time
-                      final DateTime fullDateTime = DateTime(
+                      final DateTime _ = DateTime(
                         pickedDate.year,
                         pickedDate.month,
                         pickedDate.day,
@@ -363,9 +368,79 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // ...
-                  },
+                    onPressed: () {
+                      if (_titleController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter your task title')),
+                        );
+                        return;
+                      }
+                      if (_descriptionController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter task description')),
+                        );
+                        return;
+                      }
+                      if (_dueDateTimeController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please select due date & time')),
+                        );
+                        return;
+                      }
+                      if (_timerController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please set timer (minutes before)')),
+                        );
+                        return;
+                      }
+
+                      // Parse the date/time from the formatted string "dd/MM/yyyy hh:mm a"
+                      try {
+                        // Convert "dd/MM/yyyy hh:mm a" to DateTime:
+                        final parts = _dueDateTimeController.text.split(' ');
+                        final dateParts = parts[0].split('/');
+                        final timeString = parts[1] + ' ' + parts[2]; // hh:mm AM/PM
+
+                        int day = int.parse(dateParts[0]);
+                        int month = int.parse(dateParts[1]);
+                        int year = int.parse(dateParts[2]);
+
+                        // Parse time
+                        TimeOfDay time = TimeOfDay(
+                          hour: int.parse(timeString.split(':')[0]),
+                          minute: int.parse(timeString.split(':')[1].split(' ')[0]),
+                        );
+                        // Adjust for AM/PM
+                        if (timeString.endsWith("PM") && time.hour < 12) {
+                          time = TimeOfDay(hour: time.hour + 12, minute: time.minute);
+                        } else if (timeString.endsWith("AM") && time.hour == 12) {
+                          time = const TimeOfDay(hour: 0, minute: 0);
+                        }
+
+                        final dueDateTime = DateTime(year, month, day, time.hour, time.minute);
+
+                        final timerMinutes = int.tryParse(_timerController.text) ?? 0;
+
+                        if (_notification) {
+                          scheduleNotification(
+                            title: _titleController.text,
+                            body: _descriptionController.text,
+                            dueDateTime: dueDateTime,
+                            minutesBefore: timerMinutes,
+                          );
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Task saved and notification scheduled!')),
+                        );
+                        // Optionally clear or pop screen here
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Invalid due date & time format')),
+                        );
+                      }
+                    },
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
                     padding: const EdgeInsets.symmetric(vertical: 15),
@@ -388,6 +463,45 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           ),
         ),
       ),
+    );
+  }
+
+
+
+
+
+  Future<void> scheduleNotification({
+    required String title,
+    required String body,
+    required DateTime dueDateTime,
+    required int minutesBefore,
+  }) async {
+    final scheduledTime = tz.TZDateTime.from(dueDateTime, tz.local)
+        .subtract(Duration(minutes: minutesBefore));
+
+    // If scheduledTime is before now, don't schedule (optional safety)
+    if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) {
+      return;
+    }
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      scheduledTime.millisecondsSinceEpoch ~/ 1000, // Unique ID
+      title,
+      body,
+      scheduledTime,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'task_channel',
+          'Task Reminders',
+          channelDescription: 'Reminds before the task is due',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+      UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.dateAndTime,
     );
   }
 

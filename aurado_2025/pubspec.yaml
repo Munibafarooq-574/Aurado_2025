@@ -14,8 +14,10 @@ dependencies:
   provider: ^6.1.2  # For state management
   flutter_local_notifications: ^17.2.0  # For notifications
   syncfusion_flutter_charts: ^26.2.11  # For ProgressChart
+  timezone: ^0.9.2
 
 dev_dependencies:
+
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
