@@ -4,14 +4,22 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'screens/home_screen.dart';
 import 'providers/task_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+Future<void> requestNotificationPermission() async {
+  final status = await Permission.notification.status;
+
+  if (status.isDenied || status.isPermanentlyDenied) {
+    await Permission.notification.request();
+  }
+}
 // ✅ Global instance for notifications
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await requestNotificationPermission();
   // ✅ Initialize timezone for scheduling
   tz.initializeTimeZones();
 

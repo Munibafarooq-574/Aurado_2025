@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'create_a_task_screen.dart';
 import '../models/chart_data.dart';
+import 'notification_test_screen.dart';
+import 'chatbot_screen.dart';
 
 
 class Task {
@@ -219,14 +221,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildChatbot() => Center(child: Text('Chatbot Screen'));
-  Widget _buildNotifications() => Center(child: Text('Notifications Screen'));
+  //Widget _buildChatbot() => Center(child: Text('Chatbot Screen'));
+  //Widget _buildNotifications() => Center(child: Text('Notifications Screen'));
   Widget _buildAccount() => Center(child: Text('Account Screen'));
 
   late final List<Widget> _screens = [
     _buildDashboard(),
-    _buildChatbot(),
-    _buildNotifications(),
+    ChatbotScreen(),
+    NotificationScreen(),
     _buildAccount(),
   ];
 
@@ -319,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _selectedIndex == 0
               ? 'Dashboard'
               : _selectedIndex == 1
-              ? 'Chatbot'
+              ? 'AuraBot'
               : _selectedIndex == 2
               ? 'Notifications'
               : 'Account',
