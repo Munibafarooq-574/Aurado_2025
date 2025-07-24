@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import 'package:intl/intl.dart';
 
 class TaskCard extends StatelessWidget {
-  final Task task;
+  final TaskModel task;
   final ValueChanged<bool?>? onToggle;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -38,7 +39,7 @@ class TaskCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(task.description),
-            Text("Due: ${task.deadline.toString().substring(0, 16)}"),
+            Text("Due: ${DateFormat('yyyy-MM-dd – kk:mm').format(task.dueDateTime)}"),
             Row(
               children: [
                 Chip(

@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
 import '../main.dart';
+import 'work_screen.dart';
+import 'PersonalScreen.dart';
+import 'HealthScreen.dart';
+import 'ShoppingScreen.dart';
+import 'HabitScreen.dart';
+import '../models/task.dart';
 
 
 class CreateTaskScreen extends StatefulWidget {
@@ -16,7 +21,6 @@ class CreateTaskScreen extends StatefulWidget {
 class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
- // final _dueDateController = TextEditingController();
   final _timerController = TextEditingController();
   final TextEditingController _dueDateTimeController = TextEditingController();
   String? _category;
@@ -371,48 +375,33 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                     onPressed: () {
-                      if (_titleController.text.isEmpty) {
+                      if (_titleController.text.isEmpty ||
+                          _descriptionController.text.isEmpty ||
+                          _dueDateTimeController.text.isEmpty ||
+                          _timerController.text.isEmpty ||
+                          _category == null ||
+                          _priority == null ||
+                          _repeat == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter your task title')),
-                        );
-                        return;
-                      }
-                      if (_descriptionController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter task description')),
-                        );
-                        return;
-                      }
-                      if (_dueDateTimeController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please select due date & time')),
-                        );
-                        return;
-                      }
-                      if (_timerController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please set timer (minutes before)')),
+                          const SnackBar(content: Text('Please fill all fields')),
                         );
                         return;
                       }
 
-                      // Parse the date/time from the formatted string "dd/MM/yyyy hh:mm a"
                       try {
-                        // Convert "dd/MM/yyyy hh:mm a" to DateTime:
                         final parts = _dueDateTimeController.text.split(' ');
                         final dateParts = parts[0].split('/');
-                        final timeString = parts[1] + ' ' + parts[2]; // hh:mm AM/PM
+                        final timeString = parts[1] + ' ' + parts[2];
 
                         int day = int.parse(dateParts[0]);
                         int month = int.parse(dateParts[1]);
                         int year = int.parse(dateParts[2]);
 
-                        // Parse time
                         TimeOfDay time = TimeOfDay(
                           hour: int.parse(timeString.split(':')[0]),
                           minute: int.parse(timeString.split(':')[1].split(' ')[0]),
                         );
-                        // Adjust for AM/PM
+
                         if (timeString.endsWith("PM") && time.hour < 12) {
                           time = TimeOfDay(hour: time.hour + 12, minute: time.minute);
                         } else if (timeString.endsWith("AM") && time.hour == 12) {
@@ -420,13 +409,23 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                         }
 
                         final dueDateTime = DateTime(year, month, day, time.hour, time.minute);
-
                         final timerMinutes = int.tryParse(_timerController.text) ?? 0;
+
+                        final newTask = TaskModel(
+                          title: _titleController.text,
+                          description: _descriptionController.text,
+                          category: _category!,
+                          priority: _priority!,
+                          repeat: _repeat!,
+                          dueDateTime: dueDateTime,
+                          minutesBefore: timerMinutes,
+                          notification: _notification,
+                        );
 
                         if (_notification) {
                           scheduleNotification(
-                            title: _titleController.text,
-                            body: _descriptionController.text,
+                            title: newTask.title,
+                            body: newTask.description,
                             dueDateTime: dueDateTime,
                             minutesBefore: timerMinutes,
                           );
@@ -435,15 +434,40 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Task saved and notification scheduled!')),
                         );
-                        // Optionally clear or pop screen here
+
+                        Widget destinationScreen;
+
+                        switch (_category) {
+                          case 'Work':
+                            destinationScreen = WorkScreen(task: newTask);
+                            break;
+                          case 'Personal':
+                            destinationScreen = PersonalScreen(task: newTask);
+                            break;
+                          case 'Shopping':
+                            destinationScreen = ShoppingScreen(task: newTask);
+                            break;
+                          case 'Health':
+                            destinationScreen = HealthScreen(task: newTask);
+                            break;
+                          case 'Habit':
+                            destinationScreen = HabitScreen(task: newTask);
+                            break;
+                          default:
+                            return;
+                        }
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => destinationScreen),
+                        );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Invalid due date & time format')),
                         );
                       }
                     },
-
-                  style: ElevatedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(

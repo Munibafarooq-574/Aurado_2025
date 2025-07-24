@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 
 class TaskForm extends StatefulWidget {
-  final Task? task;
-  final Function(Task) onSave;
+  final TaskModel? task;
+  final Function(TaskModel) onSave;
 
   const TaskForm({this.task, required this.onSave, super.key});
 
@@ -26,7 +26,7 @@ class _TaskFormState extends State<TaskForm> {
     super.initState();
     _titleController = TextEditingController(text: widget.task?.title ?? '');
     _descriptionController = TextEditingController(text: widget.task?.description ?? '');
-    _deadline = widget.task?.deadline ?? DateTime.now();
+    _deadline = widget.task?.dueDateTime ?? DateTime.now();
     _priority = widget.task?.priority ?? 'Medium';
     _category = widget.task?.category ?? 'Work';
   }
@@ -119,14 +119,18 @@ class _TaskFormState extends State<TaskForm> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  final newTask = Task(
+                  final newTask = TaskModel(
                     title: _titleController.text,
                     description: _descriptionController.text,
-                    deadline: _deadline,
+                    dueDateTime: _deadline,
                     priority: _priority,
                     category: _category,
+                    repeat: widget.task?.repeat ?? 'None', // Set default or pick from UI
+                    minutesBefore: widget.task?.minutesBefore ?? 10,
+                    notification: widget.task?.notification ?? false,
                     isCompleted: widget.task?.isCompleted ?? false,
                   );
+
                   widget.onSave(newTask);
                 }
               },

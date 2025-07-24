@@ -1,28 +1,37 @@
-class Task {
+class TaskModel {
   final String title;
   final String description;
-  final DateTime deadline;
-  final String priority;
   final String category;
+  final String priority;
+  final String repeat;
+  final DateTime dueDateTime;
+  final int minutesBefore;
+  final bool notification;
   bool isCompleted;
 
-  Task({
+  TaskModel({
     required this.title,
     required this.description,
-    required this.deadline,
-    required this.priority,
     required this.category,
+    required this.priority,
+    required this.repeat,
+    required this.dueDateTime,
+    required this.minutesBefore,
+    required this.notification,
     this.isCompleted = false,
   });
 
   // Copy constructor
-  Task.copy(Task other)
+  TaskModel.copy(TaskModel other)
       : this(
     title: other.title,
     description: other.description,
-    deadline: other.deadline,
-    priority: other.priority,
     category: other.category,
+    priority: other.priority,
+    repeat: other.repeat,
+    dueDateTime: other.dueDateTime,
+    minutesBefore: other.minutesBefore,
+    notification: other.notification,
     isCompleted: other.isCompleted,
   );
 }

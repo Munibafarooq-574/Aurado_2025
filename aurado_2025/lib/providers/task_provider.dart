@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 
 class TaskProvider with ChangeNotifier {
-  List<Task> tasks = [];
+  List<TaskModel> tasks = [];
 
-  void addTask(Task task) {
+  void addTask(TaskModel task) {
     tasks.add(task);
     notifyListeners();
   }

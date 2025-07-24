@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/task.dart';
 
 class ShoppingScreen extends StatefulWidget {
+  final TaskModel? task;
+
+  ShoppingScreen({Key? key, this.task}) : super(key: key);
+
   @override
   _ShoppingScreenState createState() => _ShoppingScreenState();
 }
 
 class _ShoppingScreenState extends State<ShoppingScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {
-      'title': 'Grocery Shopping',
-      'description': 'Buy vegetables, fruits, and dairy products',
-      'priority': 'High',
-      'day': 'Sunday, Jul 20',
-      'time': '10:00 AM',
-      'timer': '1 hour',
-      'repeat': 'Weekly',
-    },
-    {
-      'title': 'Buy Clothes',
-      'description': 'Purchase new shirts and jeans',
-      'priority': 'Medium',
-      'day': 'Saturday, Jul 19', // Fixed typo 'GJul' to 'Jul'
-      'time': '03:00 PM',
-      'timer': '2 hours',
-      'repeat': 'No',
-    },
-  ];
+  List<TaskModel> _tasks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.task != null) {
+      _tasks.add(widget.task!);
+    }
+  }
+
+  void addTask(TaskModel task) {
+    setState(() {
+      _tasks.add(task);
+    });
+  }
 
   void _deleteTask(int index) {
     setState(() {
@@ -43,24 +43,48 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Center(
+          child: Text(
+            'Shopping Tasks',
+            style: TextStyle(
+              fontWeight: FontWeight.bold, // bold text
+            ),
+          ),
+        ),
+        backgroundColor: const Color(0xFFFFFBEEE6),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                'Shopping Tasks',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold), // Fixed syntax
-              ),
-              const SizedBox(height: 5),
               Text(
                 'Date: $day, $date | Time: $time PKT',
                 style: const TextStyle(fontSize: 13, color: Colors.black54),
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView.builder(
+                child: _tasks.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center, // Centers vertically
+                    children: [
+                      const Text(
+                        'No tasks yet',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10), // Adds space between the two texts
+                      const Text(
+                        'Tap Create a Task from the Dashboard screen to add a task.',
+                        textAlign: TextAlign.center, // Centers the text horizontally
+                      ),
+                    ],
+                  ),
+                )
+                    : ListView.builder(
                   itemCount: _tasks.length,
                   itemBuilder: (context, index) {
                     return CustomTaskCard(
@@ -73,9 +97,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
                     padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
@@ -93,16 +115,19 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
 }
 
 class CustomTaskCard extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final TaskModel task;
   final VoidCallback onDelete;
 
   const CustomTaskCard({
     required this.task,
     required this.onDelete,
+    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final dueDateFormatted = DateFormat('MMM d, yyyy – hh:mm a').format(task.dueDateTime);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -112,32 +137,19 @@ class CustomTaskCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              task['title'],
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            Text(task.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(
-              'Description: ${task['description']}',
-              style: const TextStyle(fontSize: 13),
-            ),
+            Text('Description: ${task.description}', style: const TextStyle(fontSize: 13)),
             const SizedBox(height: 4),
-            Text(
-              'Priority: ${task['priority']} | Day: ${task['day']}',
-              style: const TextStyle(fontSize: 13),
-            ),
-            Text(
-              'Time: ${task['time']} | Timer: ${task['timer']} | Repeat: ${task['repeat']}',
-              style: const TextStyle(fontSize: 13),
-            ),
+            Text('Priority: ${task.priority} | Category: ${task.category}', style: const TextStyle(fontSize: 13)),
+            Text('Due Date: $dueDateFormatted', style: const TextStyle(fontSize: 13)),
+            Text('Repeat: ${task.repeat}', style: const TextStyle(fontSize: 13)),
+            Text('Notification: ${task.notification ? "Yes" : "No"}', style: const TextStyle(fontSize: 13)),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Color(0xFF800000)),
-                  onPressed: onDelete,
-                ),
+                IconButton(icon: const Icon(Icons.delete, color: Color(0xFF800000)), onPressed: onDelete),
               ],
             ),
           ],

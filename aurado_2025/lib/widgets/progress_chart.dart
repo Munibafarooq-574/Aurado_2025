@@ -4,7 +4,7 @@ import '../models/task.dart';
 import '../models/chart_data.dart'; // Adjust path if needed
 
 class ProgressChart extends StatelessWidget {
-  final List<Task>? tasks; // Allow null to handle edge cases
+  final List<TaskModel>? tasks; // Allow null to handle edge cases
 
   const ProgressChart({this.tasks, super.key});
 
