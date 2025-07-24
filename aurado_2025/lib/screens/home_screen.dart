@@ -4,7 +4,15 @@ import 'create_a_task_screen.dart';
 import '../models/chart_data.dart';
 import 'notification_test_screen.dart';
 import 'chatbot_screen.dart';
-
+import 'today_screen.dart';
+import 'UpcomingScreen.dart';
+import 'CompletedScreen.dart';
+import 'missed_screen.dart';
+import 'work_screen.dart';
+import 'PersonalScreen.dart';
+import 'HealthScreen.dart';
+import 'ShoppingScreen.dart';
+import 'HabitScreen.dart';
 
 class Task {
   final String title;
@@ -233,22 +241,56 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   Widget _buildCategoryIcon(String label, String assetPath) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Color(0xFF800000), width: 2),
+    return GestureDetector(
+      onTap: () {
+        if (label == 'Work') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WorkScreen()),
+          );
+        }
+        else if (label == 'Personal') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PersonalScreen()),
+          );
+        }
+        else if (label == 'Health') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HealthScreen()),
+          );
+        }
+        else if (label == 'Shopping') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ShoppingScreen()),
+          );
+        }
+        else if (label == 'Habit') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) =>   HabitScreen()),
+          );
+        }
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Color(0xFF800000), width: 2),
+            ),
+            child: ClipOval(
+              child: Image.asset(assetPath, width: 40, height: 40, fit: BoxFit.contain),
+            ),
           ),
-          child: ClipOval(
-            child: Image.asset(assetPath, width: 40, height: 40, fit: BoxFit.contain),
-          ),
-        ),
-        SizedBox(height: 6),
-        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-      ],
+          SizedBox(height: 6),
+          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 
@@ -294,7 +336,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 boxShadow: [BoxShadow(color: Colors.black.withAlpha(64), offset: Offset(0, 4), blurRadius: 4)],
               ),
               child: TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  if (title == 'Today') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TodayScreen()),
+                    );
+                  } else if (title == 'Upcoming') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => UpcomingScreen()),
+                    );
+                  } else if (title == 'Completed') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CompletedScreen()),
+                    );
+                  } else if (title == 'Missed') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MissedScreen()),
+                    );
+                  }
+                },
                 style: TextButton.styleFrom(
                   backgroundColor: Color(0x80C4C4C4),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -306,6 +370,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
+
+
             ),
           ),
         ],

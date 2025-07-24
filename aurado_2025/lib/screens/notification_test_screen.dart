@@ -20,9 +20,9 @@ class NotificationScreen extends StatelessWidget {
             Text(
               'Date: $day, $date | Time: $time PKT',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.normal,
-                color: Colors.black45,
+                color: Colors.black54,
               ),
             ),
             const SizedBox(height: 20),

@@ -79,9 +79,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   Text(
                     'Date: $day, $date | Time: $time PKT',
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.normal,
-                      color: Colors.black45,
+                      color: Colors.black54,
                     ),
                   ),
                 ],
