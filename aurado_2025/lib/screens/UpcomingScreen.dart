@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'edit_task_screen.dart';
+import '../models/task.dart' as task_model;
 
 class UpcomingScreen extends StatefulWidget {
+  final task_model.TaskModel? newTask;
+
+  const UpcomingScreen({Key? key, this.newTask}) : super(key: key);
+
   @override
   _UpcomingScreenState createState() => _UpcomingScreenState();
 }
+
 
 class _UpcomingScreenState extends State<UpcomingScreen> {
   final List<Map<String, dynamic>> _tasks = [
@@ -28,6 +34,20 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
       'color': 0xffFFD700, // Gold
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.newTask != null) {
+      _tasks.insert(0, {
+        'title': widget.newTask!.title,
+        'description': widget.newTask!.description,
+        'time': DateFormat('hh:mm a').format(widget.newTask!.dueDateTime) + ' PKT',
+        'color': 0xff90EE90,
+      });
+    }
+  }
 
   void _deleteTask(int index) {
     setState(() {

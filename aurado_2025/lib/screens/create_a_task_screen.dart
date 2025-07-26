@@ -8,7 +8,9 @@ import 'PersonalScreen.dart';
 import 'HealthScreen.dart';
 import 'ShoppingScreen.dart';
 import 'HabitScreen.dart';
-import '../models/task.dart';
+import 'today_screen.dart';
+import 'UpcomingScreen.dart';
+import '../models/task.dart' as task_model;
 
 
 class CreateTaskScreen extends StatefulWidget {
@@ -374,100 +376,115 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                    onPressed: () {
-                      if (_titleController.text.isEmpty ||
-                          _descriptionController.text.isEmpty ||
-                          _dueDateTimeController.text.isEmpty ||
-                          _timerController.text.isEmpty ||
-                          _category == null ||
-                          _priority == null ||
-                          _repeat == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill all fields')),
-                        );
-                        return;
+                  onPressed: () {
+                    if (_titleController.text.isEmpty ||
+                        _descriptionController.text.isEmpty ||
+                        _dueDateTimeController.text.isEmpty ||
+                        _timerController.text.isEmpty ||
+                        _category == null ||
+                        _priority == null ||
+                        _repeat == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill all fields')),
+                      );
+                      return;
+                    }
+
+                    try {
+                      final parts = _dueDateTimeController.text.split(' ');
+                      final dateParts = parts[0].split('/');
+                      final timeString = parts[1] + ' ' + parts[2];
+
+                      int day = int.parse(dateParts[0]);
+                      int month = int.parse(dateParts[1]);
+                      int year = int.parse(dateParts[2]);
+
+                      TimeOfDay time = TimeOfDay(
+                        hour: int.parse(timeString.split(':')[0]),
+                        minute: int.parse(timeString.split(':')[1].split(' ')[0]),
+                      );
+
+                      if (timeString.endsWith("PM") && time.hour < 12) {
+                        time = TimeOfDay(hour: time.hour + 12, minute: time.minute);
+                      } else if (timeString.endsWith("AM") && time.hour == 12) {
+                        time = const TimeOfDay(hour: 0, minute: 0);
                       }
 
-                      try {
-                        final parts = _dueDateTimeController.text.split(' ');
-                        final dateParts = parts[0].split('/');
-                        final timeString = parts[1] + ' ' + parts[2];
+                      final dueDateTime = DateTime(year, month, day, time.hour, time.minute);
+                      final timerMinutes = int.tryParse(_timerController.text) ?? 0;
 
-                        int day = int.parse(dateParts[0]);
-                        int month = int.parse(dateParts[1]);
-                        int year = int.parse(dateParts[2]);
+                      final newTask = task_model.TaskModel(
+                        title: _titleController.text,
+                        description: _descriptionController.text,
+                        category: _category!,
+                        priority: _priority!,
+                        repeat: _repeat!,
+                        dueDateTime: dueDateTime,
+                        minutesBefore: timerMinutes,
+                        notification: _notification,
+                      );
 
-                        TimeOfDay time = TimeOfDay(
-                          hour: int.parse(timeString.split(':')[0]),
-                          minute: int.parse(timeString.split(':')[1].split(' ')[0]),
-                        );
-
-                        if (timeString.endsWith("PM") && time.hour < 12) {
-                          time = TimeOfDay(hour: time.hour + 12, minute: time.minute);
-                        } else if (timeString.endsWith("AM") && time.hour == 12) {
-                          time = const TimeOfDay(hour: 0, minute: 0);
-                        }
-
-                        final dueDateTime = DateTime(year, month, day, time.hour, time.minute);
-                        final timerMinutes = int.tryParse(_timerController.text) ?? 0;
-
-                        final newTask = TaskModel(
-                          title: _titleController.text,
-                          description: _descriptionController.text,
-                          category: _category!,
-                          priority: _priority!,
-                          repeat: _repeat!,
+                      if (_notification) {
+                        scheduleNotification(
+                          title: newTask.title,
+                          body: newTask.description,
                           dueDateTime: dueDateTime,
                           minutesBefore: timerMinutes,
-                          notification: _notification,
-                        );
-
-                        if (_notification) {
-                          scheduleNotification(
-                            title: newTask.title,
-                            body: newTask.description,
-                            dueDateTime: dueDateTime,
-                            minutesBefore: timerMinutes,
-                          );
-                        }
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Task saved and notification scheduled!')),
-                        );
-
-                        Widget destinationScreen;
-
-                        switch (_category) {
-                          case 'Work':
-                            destinationScreen = WorkScreen(task: newTask);
-                            break;
-                          case 'Personal':
-                            destinationScreen = PersonalScreen(task: newTask);
-                            break;
-                          case 'Shopping':
-                            destinationScreen = ShoppingScreen(task: newTask);
-                            break;
-                          case 'Health':
-                            destinationScreen = HealthScreen(task: newTask);
-                            break;
-                          case 'Habit':
-                            destinationScreen = HabitScreen(task: newTask);
-                            break;
-                          default:
-                            return;
-                        }
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => destinationScreen),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Invalid due date & time format')),
                         );
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Task saved and notification scheduled!')),
+                      );
+
+                      Widget destinationScreen;
+
+                      switch (_category) {
+                        case 'Work':
+                          destinationScreen = WorkScreen(task: newTask);
+                          break;
+                        case 'Personal':
+                          destinationScreen = PersonalScreen(task: newTask);
+                          break;
+                        case 'Shopping':
+                          destinationScreen = ShoppingScreen(task: newTask);
+                          break;
+                        case 'Health':
+                          destinationScreen = HealthScreen(task: newTask);
+                          break;
+                        case 'Habit':
+                          destinationScreen = HabitScreen(task: newTask);
+                          break;
+                        default:
+                          return;
+                      }
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => destinationScreen),
+                      );
+                      // 2. Date based navigation (if today or upcoming)
+                      DateTime now = DateTime.now();
+
+                      bool isToday = dueDateTime.year == now.year &&
+                          dueDateTime.month == now.month &&
+                          dueDateTime.day == now.day;
+
+                       // After the category screen, also open Today or Upcoming
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                          isToday ? TodayScreen(newTask: newTask)  : UpcomingScreen(newTask: newTask),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid due date & time format')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(

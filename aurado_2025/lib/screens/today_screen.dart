@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'edit_task_screen.dart';
+import '../models/task.dart' as task_model; // ✅ Required for TaskModel
 
 class TodayScreen extends StatefulWidget {
+  final task_model.TaskModel? newTask;
+
+  const TodayScreen({Key? key, this.newTask}) : super(key: key);
+
   @override
   _TodayScreenState createState() => _TodayScreenState();
 }
@@ -28,6 +33,20 @@ class _TodayScreenState extends State<TodayScreen> {
       'color': 0xffEC9D41, // Firebrick Red
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.newTask != null) {
+      _tasks.insert(0, {
+        'title': widget.newTask!.title,
+        'description': widget.newTask!.description,
+        'time': DateFormat('hh:mm a').format(widget.newTask!.dueDateTime) + ' PKT',
+        'color': 0xffD3D3D3,
+      });
+    }
+  }
 
   void _deleteTask(int index) {
     setState(() {

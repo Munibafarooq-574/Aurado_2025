@@ -15,7 +15,7 @@ class TaskCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.onTap,
-    super.key,
+    super.key, required String title, required String description,
   });
 
   @override
