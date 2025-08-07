@@ -1,68 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart'; // Add provider for state management
 import 'edit_task_screen.dart';
-import '../models/task.dart' as task_model; // ✅ Required for TaskModel
+import '../models/task.dart' as task_model;
+import 'package:aurado_2025/task_manager.dart'; // Import TaskManager
 
 class TodayScreen extends StatefulWidget {
   final task_model.TaskModel? newTask;
+  final bool showSuccessMessage;
 
-  const TodayScreen({Key? key, this.newTask}) : super(key: key);
+  const TodayScreen({
+    Key? key,
+    this.newTask,
+    this.showSuccessMessage = false,
+  }) : super(key: key);
 
   @override
   _TodayScreenState createState() => _TodayScreenState();
 }
 
-class _TodayScreenState extends State<TodayScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {
-      'title': 'Finish Project Report',
-      'description': 'Prepare final draft and submit to manager.',
-      'time': '09:45 PM PKT',
-      'color': 0xffD3D3D3, // Light Grey
-    },
-    {
-      'title': 'Call Client',
-      'description': 'Discus project timeline and updates.',
-      'time': '10:00 PM PKT',
-      'color': 0xff6495ED, // Cornflower Blue
-    },
-    {
-      'title': 'Team Meeting',
-      'description': 'Review weekly progress with team.',
-      'time': '10:00 PM PKT',
-      'color': 0xffEC9D41, // Firebrick Red
-    },
-  ];
 
+class _TodayScreenState extends State<TodayScreen> {
   @override
   void initState() {
     super.initState();
-
+    // Add new task to TaskManager if provided
     if (widget.newTask != null) {
-      _tasks.insert(0, {
-        'title': widget.newTask!.title,
-        'description': widget.newTask!.description,
-        'time': DateFormat('hh:mm a').format(widget.newTask!.dueDateTime) + ' PKT',
-        'color': 0xffD3D3D3,
+      Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
+    }
+
+    // ✅ Show snackbar if flag is true
+    if (widget.showSuccessMessage) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Task saved successfully")),
+        );
       });
     }
   }
 
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+  void _deleteTask(task_model.TaskModel task) {
+    Provider.of<TaskManager>(context, listen: false).removeTask(task as task_model.TaskModel);
   }
 
   @override
   Widget build(BuildContext context) {
+    final taskManager = Provider.of<TaskManager>(context); // Access TaskManager
     final now = DateTime.now();
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6), // Light Peach background
+      backgroundColor: const Color(0xFFFBEEE6),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -84,59 +74,17 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    return TaskCard(
-                      title: _tasks[index]['title']!,
-                      description: _tasks[index]['description']!,
-                      time: _tasks[index]['time']!,
-                      color: Color(_tasks[index]['color'] as int),
-                      onDelete: () => _deleteTask(index),
-                      onEdit: () async {
-                        final selectedTask = TaskModel(
-                          title: _tasks[index]['title'],
-                          description: _tasks[index]['description'],
-                          category: null,
-                          priority: null,
-                          repeat: null,
-                          dueDateTime: DateTime.now(),
-                          minutesBefore: 10,
-                          notification: false,
-                        );
-
-                        final updatedTask = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditTaskScreen(task: selectedTask),
-                          ),
-                        );
-
-                        if (updatedTask != null && updatedTask is TaskModel) {
-                          setState(() {
-                            _tasks[index] = {
-                              'title': updatedTask.title,
-                              'description': updatedTask.description,
-                              'time': DateFormat('hh:mm a').format(updatedTask.dueDateTime),
-                              'color': _tasks[index]['color'],
-                            };
-                          });
-                        }
-                      },
-
-
-                    );
-                  },
+                child: ListView(
+                  children: _buildGroupedTasks(taskManager.getTodayTasks()),
                 ),
               ),
+
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF800000), // Maroon
+                    backgroundColor: const Color(0xFF800000),
                     padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
@@ -148,6 +96,94 @@ class _TodayScreenState extends State<TodayScreen> {
         ),
       ),
     );
+  }
+
+  // Helper function to assign colors (modify as needed)
+  Color _getColorForTask(task_model.TaskModel task) {
+    switch (task.category) {
+      case 'Work':
+        return const Color(0xff6495ED);
+      case 'Personal':
+        return const Color(0xffD3D3D3);
+      case 'Shopping':
+        return const Color(0xffEC9D41);
+      case 'Health':
+        return const Color(0xff90EE90);
+      case 'Habit':
+        return const Color(0xffFFD700);
+      default:
+        return const Color(0xffD3D3D3);
+    }
+  }
+
+  IconData _getIconForCategory(String category) {
+    switch (category) {
+      case 'Work':
+        return Icons.work;
+      case 'Personal':
+        return Icons.person;
+      case 'Health':
+        return Icons.health_and_safety;
+      case 'Shopping':
+        return Icons.shopping_cart;
+      case 'Habit':
+        return Icons.loop;
+      default:
+        return Icons.task;
+    }
+  }
+
+  List<Widget> _buildGroupedTasks(List<task_model.TaskModel> tasks) {
+    final Map<String, List<task_model.TaskModel>> groupedTasks = {};
+
+    for (var task in tasks) {
+      final category = task.category ?? 'Other';
+      if (!groupedTasks.containsKey(category)) {
+        groupedTasks[category] = [];
+      }
+      groupedTasks[category]!.add(task);
+    }
+
+    List<Widget> widgets = [];
+    groupedTasks.forEach((category, taskList) {
+      taskList.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            category,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      );
+
+      widgets.addAll(taskList.map((task) {
+        return TaskCard(
+          title: task.title,
+          description: task.description,
+          time: 'Due: ${DateFormat('MMMM d, y – hh:mm a').format(task.dueDateTime)} PKT',
+          color: _getColorForTask(task),
+          onDelete: () => _deleteTask(task),
+          onEdit: () async {
+            final updatedTask = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EditTaskScreen(task: task),
+              ),
+            );
+            if (updatedTask != null && updatedTask is task_model.TaskModel) {
+              Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+            }
+          },
+        );
+      }));
+    });
+
+    return widgets;
   }
 }
 
@@ -165,7 +201,8 @@ class TaskCard extends StatelessWidget {
     required this.time,
     required this.color,
     required this.onDelete,
-    required this.onEdit, // New parameter
+    required this.onEdit,
+    super.key,
   });
 
   @override
@@ -175,7 +212,7 @@ class TaskCard extends StatelessWidget {
       color: color,
       child: ListTile(
         leading: Checkbox(
-          value: false,
+          value: false, // Update to use task.isCompleted if needed
           onChanged: (bool? value) {},
         ),
         title: Text(
@@ -190,11 +227,11 @@ class TaskCard extends StatelessWidget {
           ],
         ),
         trailing: Row(
-          mainAxisSize: MainAxisSize.min, // Ensures the column takes minimum space
+          mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               icon: const Icon(Icons.edit, color: Color(0xFF800000)),
-              onPressed: onEdit, // Call the passed callback
+              onPressed: onEdit,
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Color(0xFF800000)),
@@ -205,10 +242,4 @@ class TaskCard extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: TodayScreen(),
-  ));
 }

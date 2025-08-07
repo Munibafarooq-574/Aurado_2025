@@ -1,41 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/task.dart';
+import 'package:aurado_2025/task_manager.dart';
+import '../widgets/custom_task_card.dart';
 
 class HealthScreen extends StatefulWidget {
   final TaskModel? task;
 
-  HealthScreen({Key? key, this.task}) : super(key: key);
+  const HealthScreen({Key? key, this.task}) : super(key: key);
 
   @override
   _HealthScreenState createState() => _HealthScreenState();
 }
 
 class _HealthScreenState extends State<HealthScreen> {
-  List<TaskModel> _tasks = [];
-
   @override
   void initState() {
     super.initState();
     if (widget.task != null) {
-      _tasks.add(widget.task!);
+      Provider.of<TaskManager>(context, listen: false).addTask(widget.task!);
     }
   }
 
-  void addTask(TaskModel task) {
-    setState(() {
-      _tasks.add(task);
-    });
-  }
-
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+  void _deleteTask(TaskModel task) {
+    Provider.of<TaskManager>(context, listen: false).removeTask(task);
   }
 
   @override
   Widget build(BuildContext context) {
+    final taskManager = Provider.of<TaskManager>(context);
     final now = DateTime.now();
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
@@ -44,16 +38,14 @@ class _HealthScreenState extends State<HealthScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6),
       appBar: AppBar(
-        automaticallyImplyLeading: false, // back icon hatane ke liye
+        automaticallyImplyLeading: false,
         title: const Center(
           child: Text(
             'Health Tasks',
-            style: TextStyle(
-              fontWeight: FontWeight.bold, // bold text
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        backgroundColor: const Color(0xFFFFFBEEE6),
+        backgroundColor: const Color(0xFFFBEEE6),
       ),
       body: SafeArea(
         child: Padding(
@@ -67,29 +59,30 @@ class _HealthScreenState extends State<HealthScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: _tasks.isEmpty
+                child: taskManager.getTasksByCategory('Health').isEmpty
                     ? Center(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center, // Centers vertically
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
                         'No tasks yet',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 10), // Adds space between the two texts
+                      const SizedBox(height: 10),
                       const Text(
                         'Tap Create a Task from the Dashboard screen to add a task.',
-                        textAlign: TextAlign.center, // Centers the text horizontally
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 )
                     : ListView.builder(
-                  itemCount: _tasks.length,
+                  itemCount: taskManager.getTasksByCategory('Health').length,
                   itemBuilder: (context, index) {
+                    final task = taskManager.getTasksByCategory('Health')[index];
                     return CustomTaskCard(
-                      task: _tasks[index],
-                      onDelete: () => _deleteTask(index),
+                      task: task,
+                      onDelete: () => _deleteTask(task),
                     );
                   },
                 ),
@@ -108,51 +101,6 @@ class _HealthScreenState extends State<HealthScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class CustomTaskCard extends StatelessWidget {
-  final TaskModel task;
-  final VoidCallback onDelete;
-
-  const CustomTaskCard({
-    required this.task,
-    required this.onDelete,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final dueDateFormatted = DateFormat('MMM d, yyyy – hh:mm a').format(task.dueDateTime);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(task.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text('Description: ${task.description}', style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 4),
-            Text('Priority: ${task.priority} | Category: ${task.category}', style: const TextStyle(fontSize: 13)),
-            Text('Due Date: $dueDateFormatted', style: const TextStyle(fontSize: 13)),
-            Text('Repeat: ${task.repeat}', style: const TextStyle(fontSize: 13)),
-            Text('Notification: ${task.notification ? "Yes" : "No"}', style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(icon: const Icon(Icons.delete, color: Color(0xFF800000)), onPressed: onDelete),
-              ],
-            ),
-          ],
         ),
       ),
     );

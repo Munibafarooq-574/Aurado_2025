@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'screens/home_screen.dart';
-import 'task_manager.dart';  // Aapki TaskManager class yahan import ho
 import 'package:permission_handler/permission_handler.dart';
+import 'screens/home_screen.dart'; // Adjust to your dashboard or home screen
+import 'task_manager.dart';
 
 // Notification permission request
 Future<void> requestNotificationPermission() async {
@@ -67,13 +67,25 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF800000),
             foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFFBEEE6),
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
       darkTheme: ThemeData.dark().copyWith(
         primaryColor: const Color(0xFF9B2C2C),
         cardTheme: CardThemeData(
-          color: Colors.white,
+          color: Colors.grey[900],
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -84,11 +96,23 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF9B2C2C),
             foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1A1A1A),
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const HomeScreen(), // Yahan aap apni initial screen daal sakti hain (e.g. TodayScreen ya HomeScreen)
+      home: const HomeScreen(), // Use HomeScreen or TodayScreen as needed
     );
   }
 }

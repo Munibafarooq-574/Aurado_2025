@@ -43,13 +43,16 @@ class TaskCard extends StatelessWidget {
             Row(
               children: [
                 Chip(
-                  label: Text(task.priority),
-                  backgroundColor: task.priority == "High" ? Colors.red[100] : Colors.yellow[100],
+                  label: Text(task.priority ?? 'N/A'),
+                  backgroundColor: (task.priority ?? '') == "High"
+                      ? Colors.red[100]
+                      : Colors.yellow[100],
                 ),
                 const SizedBox(width: 8),
-                Chip(label: Text(task.category)),
+                Chip(label: Text(task.category ?? 'N/A')),
               ],
             ),
+
           ],
         ),
         trailing: Row(

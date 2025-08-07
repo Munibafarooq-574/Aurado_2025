@@ -27,12 +27,23 @@ class TaskManager extends ChangeNotifier {
 
   List<TaskModel> getTodayTasks() {
     final now = DateTime.now();
-    return _tasks.where((task) =>
-    task.dueDateTime.year == now.year &&
-        task.dueDateTime.month == now.month &&
-        task.dueDateTime.day == now.day
-    ).toList();
+    return _tasks.where((task) {
+      return task.dueDateTime.year == now.year &&
+          task.dueDateTime.month == now.month &&
+          task.dueDateTime.day == now.day;
+    }).toList();
   }
+
+  List<TaskModel> getUpcomingTasks() {
+    final now = DateTime.now();
+    return _tasks.where((task) {
+      final taskDate = DateTime(task.dueDateTime.year, task.dueDateTime.month, task.dueDateTime.day);
+      final today = DateTime(now.year, now.month, now.day);
+      return taskDate.isAfter(today);
+    }).toList();
+  }
+
+
 
   List<TaskModel> getTasksByCategory(String category) {
     return _tasks.where((task) => task.category == category).toList();

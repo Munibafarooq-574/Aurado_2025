@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/task.dart';
 import 'edit_task_screen.dart';
 
 class MissedScreen extends StatefulWidget {

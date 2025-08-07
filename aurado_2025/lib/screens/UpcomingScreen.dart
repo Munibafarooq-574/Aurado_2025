@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'edit_task_screen.dart';
 import '../models/task.dart' as task_model;
+import 'package:aurado_2025/task_manager.dart'; // Import TaskManager
+import 'package:provider/provider.dart'; // Add provider for state management
 
 class UpcomingScreen extends StatefulWidget {
   final task_model.TaskModel? newTask;
+  final bool showSuccessMessage;
 
-  const UpcomingScreen({Key? key, this.newTask}) : super(key: key);
+  const UpcomingScreen({
+    Key? key,
+    this.newTask,
+    this.showSuccessMessage = false,
+  }) : super(key: key);
 
   @override
   _UpcomingScreenState createState() => _UpcomingScreenState();
@@ -14,45 +21,29 @@ class UpcomingScreen extends StatefulWidget {
 
 
 class _UpcomingScreenState extends State<UpcomingScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {
-      'title': 'Prepare Slides',
-      'description': 'Work on slides for next week’s meeting.',
-      'time': '08:30 AM PKT',
-      'color': 0xffADD8E6, // Light Blue
-    },
-    {
-      'title': 'Doctor Appointment',
-      'description': 'Routine check-up at clinic.',
-      'time': '01:00 PM PKT',
-      'color': 0xff90EE90, // Light Green
-    },
-    {
-      'title': 'Grocery Shopping',
-      'description': 'Buy ingredients for next week’s meals.',
-      'time': '05:00 PM PKT',
-      'color': 0xffFFD700, // Gold
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
 
+    // Add new task if provided
     if (widget.newTask != null) {
-      _tasks.insert(0, {
-        'title': widget.newTask!.title,
-        'description': widget.newTask!.description,
-        'time': DateFormat('hh:mm a').format(widget.newTask!.dueDateTime) + ' PKT',
-        'color': 0xff90EE90,
+      Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
+    }
+
+    // Show snackbar if flag is true
+    if (widget.showSuccessMessage) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Task saved successfully")),
+        );
       });
     }
   }
 
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+
+  void _deleteTask(task_model.TaskModel task) {
+    Provider.of<TaskManager>(context, listen: false).removeTask(task as task_model.TaskModel);
   }
 
   @override
@@ -61,6 +52,8 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
+    final taskManager = Provider.of<TaskManager>(context);
+    final upcomingTasks = taskManager.getUpcomingTasks(); // You’ll define this next
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6), // Light Peach background
@@ -85,49 +78,26 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    return TaskCard(
-                      title: _tasks[index]['title']!,
-                      description: _tasks[index]['description']!,
-                      time: _tasks[index]['time']!,
-                      color: Color(_tasks[index]['color'] as int),
-                      onDelete: () => _deleteTask(index),
-                      onEdit: () async {
-                        final selectedTask = TaskModel(
-                          title: _tasks[index]['title'],
-                          description: _tasks[index]['description'],
-                          category: null,
-                          priority: null,
-                          repeat: null,
-                          dueDateTime: DateTime.now(),
-                          minutesBefore: 10,
-                          notification: false,
-                        );
-
-                        final updatedTask = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditTaskScreen(task: selectedTask),
-                          ),
-                        );
-
-                        if (updatedTask != null && updatedTask is TaskModel) {
-                          setState(() {
-                            _tasks[index] = {
-                              'title': updatedTask.title,
-                              'description': updatedTask.description,
-                              'time': DateFormat('hh:mm a').format(updatedTask.dueDateTime),
-                              'color': _tasks[index]['color'],
-                            };
-                          });
-                        }
-                      },
-                    );
-                  },
+                child: upcomingTasks.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.event_busy, size: 50, color: Colors.grey),
+                      SizedBox(height: 10),
+                      Text(
+                        "No upcoming tasks!",
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                )
+                    : ListView(
+                  children: _buildGroupedTasks(upcomingTasks, context),
                 ),
               ),
+
+
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(
@@ -148,6 +118,94 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
       ),
     );
   }
+
+  Color _getColorForTask(task_model.TaskModel task) {
+    switch (task.category) {
+      case 'Work':
+        return const Color(0xff6495ED);
+      case 'Personal':
+        return const Color(0xffD3D3D3);
+      case 'Shopping':
+        return const Color(0xffEC9D41);
+      case 'Health':
+        return const Color(0xff90EE90);
+      case 'Habit':
+        return const Color(0xffFFD700);
+      default:
+        return const Color(0xffD3D3D3);
+    }
+  }
+
+  IconData _getIconForCategory(String category) {
+    switch (category) {
+      case 'Work':
+        return Icons.work;
+      case 'Personal':
+        return Icons.person;
+      case 'Health':
+        return Icons.health_and_safety;
+      case 'Shopping':
+        return Icons.shopping_cart;
+      case 'Habit':
+        return Icons.loop;
+      default:
+        return Icons.task;
+    }
+  }
+
+  List<Widget> _buildGroupedTasks(List<task_model.TaskModel> tasks, BuildContext context) {
+    final Map<String, List<task_model.TaskModel>> groupedTasks = {};
+
+    for (var task in tasks) {
+      final category = task.category ?? 'Other';
+      groupedTasks.putIfAbsent(category, () => []).add(task);
+    }
+
+    List<Widget> widgets = [];
+    groupedTasks.forEach((category, taskList) {
+      taskList.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            children: [
+              Icon(_getIconForCategory(category)),
+              const SizedBox(width: 8),
+              Text(
+                category,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      widgets.addAll(taskList.map((task) {
+        return TaskCard(
+          title: task.title,
+          description: task.description,
+          time: 'Due: ${DateFormat('MMMM d, y – hh:mm a').format(task.dueDateTime)} PKT',
+          color: _getColorForTask(task),
+          onDelete: () {
+            Provider.of<TaskManager>(context, listen: false).removeTask(task);
+          },
+          onEdit: () async {
+            final updatedTask = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => EditTaskScreen(task: task)),
+            );
+
+            if (updatedTask != null && updatedTask is task_model.TaskModel) {
+              Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+            }
+          },
+        );
+      }));
+    });
+
+    return widgets;
+  }
+
 }
 
 class TaskCard extends StatelessWidget {
