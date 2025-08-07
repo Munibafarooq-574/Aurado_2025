@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'edit_task_screen.dart';
 import '../models/task.dart' as task_model;
-import 'package:aurado_2025/task_manager.dart'; // Import TaskManager
-import 'package:provider/provider.dart'; // Add provider for state management
+import 'package:aurado_2025/task_manager.dart';
 
 class UpcomingScreen extends StatefulWidget {
   final task_model.TaskModel? newTask;
@@ -23,36 +23,33 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
   @override
   void initState() {
     super.initState();
-    // Add new task if provided
-    if (widget.newTask != null) {
-      Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
-    }
-
-    // Show snackbar if flag is true
-    if (widget.showSuccessMessage) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.newTask != null) {
+        Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
+      }
+      if (widget.showSuccessMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Task saved successfully")),
+          const SnackBar(content: Text("Task saved successfully")),
         );
-      });
-    }
+      }
+    });
   }
 
   void _deleteTask(task_model.TaskModel task) {
-    Provider.of<TaskManager>(context, listen: false).removeTask(task as task_model.TaskModel);
+    Provider.of<TaskManager>(context, listen: false).removeTask(task);
   }
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final day = DateFormat('EEEE').format(now);
-    final date = DateFormat('MMMM d, y').format(now);
-    final time = DateFormat('hh:mm a').format(now);
-    final taskManager = Provider.of<TaskManager>(context);
+    final taskManager = Provider.of<TaskManager>(context); // Listen to changes
+    final now = DateTime.now(); // Current time: 01:48 PM PKT, August 07, 2025
+    final day = DateFormat('EEEE').format(now); // "Thursday"
+    final date = DateFormat('MMMM d, y').format(now); // "August 7, 2025"
+    final time = DateFormat('hh:mm a').format(now); // "01:48 PM"
     final upcomingTasks = taskManager.getUpcomingTasks();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6), // Light Peach background
+      backgroundColor: const Color(0xFFFBEEE6),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -95,11 +92,9 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF800000), // Maroon
+                    backgroundColor: const Color(0xFF800000),
                     padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
@@ -167,7 +162,11 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
               const SizedBox(width: 8),
               Text(
                 category,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ],
           ),
@@ -176,34 +175,41 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
 
       widgets.addAll(taskList.map((task) {
         return TaskCard(
+          key: ValueKey(task.id),
           title: task.title,
           description: task.description,
           time: 'Due: ${DateFormat('MMMM d, y – hh:mm a').format(task.dueDateTime)} PKT',
           color: _getColorForTask(task),
-          onDelete: () {
-            Provider.of<TaskManager>(context, listen: false).removeTask(task);
-          },
+          onDelete: () => _deleteTask(task),
           onEdit: () async {
-            final updatedTask = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => EditTaskScreen(task: task)),
-            );
-
-            if (updatedTask != null && updatedTask is task_model.TaskModel) {
-              Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
-              // Show dialog box for task update
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Task has been updated'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('OK'),
-                    ),
-                  ],
+            try {
+              final updatedTask = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditTaskScreen(task: task),
                 ),
+              );
+              if (updatedTask != null && updatedTask is task_model.TaskModel) {
+                Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Success'),
+                    content: const Text('Task has been updated'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+
+                setState(() {});  // <-- Optional but good to have to refresh UI immediately
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error opening Edit screen: $e')),
               );
             }
           },
@@ -216,6 +222,7 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
 }
 
 class TaskCard extends StatelessWidget {
+  final Key key;
   final String title;
   final String description;
   final String time;
@@ -224,13 +231,14 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onEdit;
 
   const TaskCard({
+    required this.key,
     required this.title,
     required this.description,
     required this.time,
     required this.color,
     required this.onDelete,
     required this.onEdit,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +246,10 @@ class TaskCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 10),
       color: color,
       child: ListTile(
+        leading: Checkbox(
+          value: false,
+          onChanged: (bool? value) {},
+        ),
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -246,7 +258,7 @@ class TaskCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(description),
-            Text('Due: $time', style: const TextStyle(fontSize: 12)),
+            Text(time, style: const TextStyle(fontSize: 12)),
           ],
         ),
         trailing: Row(

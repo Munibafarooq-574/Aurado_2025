@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart'; // Add provider for state management
+import 'package:provider/provider.dart';
 import 'edit_task_screen.dart';
 import '../models/task.dart' as task_model;
-import 'package:aurado_2025/task_manager.dart'; // Import TaskManager
+import 'package:aurado_2025/task_manager.dart';
 
 class TodayScreen extends StatefulWidget {
   final task_model.TaskModel? newTask;
@@ -23,32 +23,29 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void initState() {
     super.initState();
-    // Add new task to TaskManager if provided
-    if (widget.newTask != null) {
-      Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
-    }
-
-    // Show snackbar if flag is true
-    if (widget.showSuccessMessage) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.newTask != null) {
+        Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
+      }
+      if (widget.showSuccessMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Task saved successfully")),
+          const SnackBar(content: Text("Task saved successfully")),
         );
-      });
-    }
+      }
+    });
   }
 
   void _deleteTask(task_model.TaskModel task) {
-    Provider.of<TaskManager>(context, listen: false).removeTask(task as task_model.TaskModel);
+    Provider.of<TaskManager>(context, listen: false).removeTask(task);
   }
 
   @override
   Widget build(BuildContext context) {
-    final taskManager = Provider.of<TaskManager>(context); // Access TaskManager
-    final now = DateTime.now();
-    final day = DateFormat('EEEE').format(now);
-    final date = DateFormat('MMMM d, y').format(now);
-    final time = DateFormat('hh:mm a').format(now);
+    final taskManager = Provider.of<TaskManager>(context); // Listen to changes
+    final now = DateTime.now(); // Current time: 01:48 PM PKT, August 07, 2025
+    final day = DateFormat('EEEE').format(now); // "Thursday"
+    final date = DateFormat('MMMM d, y').format(now); // "August 7, 2025"
+    final time = DateFormat('hh:mm a').format(now); // "01:48 PM"
     final todayTasks = taskManager.getTodayTasks();
 
     return Scaffold(
@@ -89,7 +86,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                 )
                     : ListView(
-                  children: _buildGroupedTasks(todayTasks),
+                  children: _buildGroupedTasks(todayTasks, context),
                 ),
               ),
               const SizedBox(height: 10),
@@ -111,7 +108,6 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
-  // Helper function to assign colors
   Color _getColorForTask(task_model.TaskModel task) {
     switch (task.category) {
       case 'Work':
@@ -146,15 +142,12 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
-  List<Widget> _buildGroupedTasks(List<task_model.TaskModel> tasks) {
+  List<Widget> _buildGroupedTasks(List<task_model.TaskModel> tasks, BuildContext context) {
     final Map<String, List<task_model.TaskModel>> groupedTasks = {};
 
     for (var task in tasks) {
       final category = task.category ?? 'Other';
-      if (!groupedTasks.containsKey(category)) {
-        groupedTasks[category] = [];
-      }
-      groupedTasks[category]!.add(task);
+      groupedTasks.putIfAbsent(category, () => []).add(task);
     }
 
     List<Widget> widgets = [];
@@ -163,46 +156,59 @@ class _TodayScreenState extends State<TodayScreen> {
       widgets.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            category,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          child: Row(
+            children: [
+              Icon(_getIconForCategory(category)),
+              const SizedBox(width: 8),
+              Text(
+                category,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
         ),
       );
 
       widgets.addAll(taskList.map((task) {
         return TaskCard(
+          key: ValueKey(task.id),
           title: task.title,
           description: task.description,
           time: 'Due: ${DateFormat('MMMM d, y – hh:mm a').format(task.dueDateTime)} PKT',
           color: _getColorForTask(task),
           onDelete: () => _deleteTask(task),
           onEdit: () async {
-            final updatedTask = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => EditTaskScreen(task: task),
-              ),
-            );
-            if (updatedTask != null && updatedTask is task_model.TaskModel) {
-              Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
-              // Show dialog box for task update
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Task has been updated'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('OK'),
-                    ),
-                  ],
+            try {
+              final updatedTask = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditTaskScreen(task: task),
                 ),
+              );
+              if (updatedTask != null && updatedTask is task_model.TaskModel) {
+                Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Success'),
+                    content: const Text('Task has been updated'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+                setState(() {});  // <-- Optional but good to have to refresh UI immediately
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error opening Edit screen: $e')),
               );
             }
           },
@@ -215,6 +221,7 @@ class _TodayScreenState extends State<TodayScreen> {
 }
 
 class TaskCard extends StatelessWidget {
+  final Key key;
   final String title;
   final String description;
   final String time;
@@ -223,14 +230,14 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onEdit;
 
   const TaskCard({
+    required this.key,
     required this.title,
     required this.description,
     required this.time,
     required this.color,
     required this.onDelete,
     required this.onEdit,
-    super.key,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -239,7 +246,7 @@ class TaskCard extends StatelessWidget {
       color: color,
       child: ListTile(
         leading: Checkbox(
-          value: false, // Update to use task.isCompleted if needed
+          value: false,
           onChanged: (bool? value) {},
         ),
         title: Text(
@@ -250,7 +257,7 @@ class TaskCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(description),
-            Text('Due: $time', style: const TextStyle(fontSize: 12)),
+            Text(time, style: const TextStyle(fontSize: 12)),
           ],
         ),
         trailing: Row(

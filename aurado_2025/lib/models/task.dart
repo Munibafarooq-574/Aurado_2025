@@ -20,7 +20,8 @@ class TaskModel {
     required this.dueDateTime,
     required this.minutesBefore,
     required this.notification,
-    this.isCompleted = false, int? timer,
+    this.isCompleted = false,
+    int? timer, // Deprecated parameter, kept for compatibility
   }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
   /// 🔁 Copy constructor (deep copy)
@@ -62,4 +63,14 @@ class TaskModel {
       isCompleted: isCompleted ?? this.isCompleted,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is TaskModel &&
+              runtimeType == other.runtimeType &&
+              id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
