@@ -19,7 +19,6 @@ class TodayScreen extends StatefulWidget {
   _TodayScreenState createState() => _TodayScreenState();
 }
 
-
 class _TodayScreenState extends State<TodayScreen> {
   @override
   void initState() {
@@ -29,7 +28,7 @@ class _TodayScreenState extends State<TodayScreen> {
       Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
     }
 
-    // ✅ Show snackbar if flag is true
+    // Show snackbar if flag is true
     if (widget.showSuccessMessage) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -50,6 +49,7 @@ class _TodayScreenState extends State<TodayScreen> {
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
+    final todayTasks = taskManager.getTodayTasks();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6),
@@ -74,11 +74,24 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView(
-                  children: _buildGroupedTasks(taskManager.getTodayTasks()),
+                child: todayTasks.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.event_busy, size: 50, color: Colors.grey),
+                      SizedBox(height: 10),
+                      Text(
+                        "No tasks for today!",
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                )
+                    : ListView(
+                  children: _buildGroupedTasks(todayTasks),
                 ),
               ),
-
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(
@@ -98,7 +111,7 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
-  // Helper function to assign colors (modify as needed)
+  // Helper function to assign colors
   Color _getColorForTask(task_model.TaskModel task) {
     switch (task.category) {
       case 'Work':
@@ -177,6 +190,20 @@ class _TodayScreenState extends State<TodayScreen> {
             );
             if (updatedTask != null && updatedTask is task_model.TaskModel) {
               Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+              // Show dialog box for task update
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Success'),
+                  content: const Text('Task has been updated'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
             }
           },
         );

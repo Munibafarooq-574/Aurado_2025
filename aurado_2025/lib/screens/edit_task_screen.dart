@@ -426,7 +426,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                               content:
-                              Text('Task updated and notification scheduled!')),
+                              Text('Task updated')),
                         );
 
                         Navigator.pop(context, updatedTask);

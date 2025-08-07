@@ -19,13 +19,10 @@ class UpcomingScreen extends StatefulWidget {
   _UpcomingScreenState createState() => _UpcomingScreenState();
 }
 
-
 class _UpcomingScreenState extends State<UpcomingScreen> {
-
   @override
   void initState() {
     super.initState();
-
     // Add new task if provided
     if (widget.newTask != null) {
       Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
@@ -41,7 +38,6 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
     }
   }
 
-
   void _deleteTask(task_model.TaskModel task) {
     Provider.of<TaskManager>(context, listen: false).removeTask(task as task_model.TaskModel);
   }
@@ -53,7 +49,7 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
     final taskManager = Provider.of<TaskManager>(context);
-    final upcomingTasks = taskManager.getUpcomingTasks(); // You’ll define this next
+    final upcomingTasks = taskManager.getUpcomingTasks();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6), // Light Peach background
@@ -96,8 +92,6 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
                   children: _buildGroupedTasks(upcomingTasks, context),
                 ),
               ),
-
-
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(
@@ -197,6 +191,20 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
 
             if (updatedTask != null && updatedTask is task_model.TaskModel) {
               Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+              // Show dialog box for task update
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Success'),
+                  content: const Text('Task has been updated'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
             }
           },
         );
@@ -205,7 +213,6 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
 
     return widgets;
   }
-
 }
 
 class TaskCard extends StatelessWidget {
