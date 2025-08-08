@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../models/task.dart';
+import '../task_manager.dart';
 import 'edit_task_screen.dart';
 
 class MissedScreen extends StatefulWidget {
@@ -9,31 +14,20 @@ class MissedScreen extends StatefulWidget {
 }
 
 class _MissedScreenState extends State<MissedScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {
-      'title': 'Submit Expense Report',
-      'description': 'Missed deadline to upload monthly report.',
-      'time': '09:00 AM PKT',
-      'color': 0xffFFB6C1, // Light Pink
-    },
-    {
-      'title': 'Client Call',
-      'description': 'Follow-up call with client was missed.',
-      'time': '11:00 AM PKT',
-      'color': 0xffFFA07A, // Light Salmon
-    },
-    {
-      'title': 'Assignment Submission',
-      'description': 'Assignment was due yesterday.',
-      'time': '04:30 PM PKT',
-      'color': 0xffD3D3D3, // Light Gray
-    },
-  ];
+  Timer? _timer;
+  bool selectAll = false;
+  final Set<TaskModel> selectedTasks = {};
 
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(minutes: 1), (_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -43,142 +37,305 @@ class _MissedScreenState extends State<MissedScreen> {
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
 
+    final missedTasks = Provider.of<TaskManager>(context).getMissedTasks();
+
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'Missed Tasks',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                'Date: $day, $date | Time: $time PKT',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    return TaskCard(
-                      title: _tasks[index]['title']!,
-                      description: _tasks[index]['description']!,
-                      time: _tasks[index]['time']!,
-                      color: Color(_tasks[index]['color'] as int),
-                      onDelete: () => _deleteTask(index),
-                      onEdit: () async {
-                        final selectedTask = TaskModel(
-                          title: _tasks[index]['title'],
-                          description: _tasks[index]['description'],
-                          category: null,
-                          priority: null,
-                          repeat: null,
-                          dueDateTime: DateTime.now(),
-                          minutesBefore: 10,
-                          notification: false,
-                        );
-
-                        final updatedTask = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditTaskScreen(task: selectedTask),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Missed Tasks',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    'Date: $day, $date | Time: $time PKT',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: missedTasks.isEmpty
+                        ? Center(
+                      child: Text(
+                        'No missed tasks!',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    )
+                        : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Column(
+                        children: [
+                          // Select All checkbox row
+                          Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: selectAll,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        selectAll = value ?? false;
+                                        selectedTasks.clear();
+                                        if (selectAll) {
+                                          selectedTasks.addAll(missedTasks);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const Text('Select All'),
+                                ],
+                              ),
+                              ElevatedButton(
+                                onPressed: selectedTasks.isNotEmpty
+                                    ? () {
+                                  _showDeleteConfirmationDialog();
+                                }
+                                    : null,
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                  MaterialStateProperty.resolveWith<
+                                      Color>((states) {
+                                    if (states
+                                        .contains(MaterialState.disabled)) {
+                                      return Colors.grey;
+                                    }
+                                    return const Color(0xFF800000);
+                                  }),
+                                  padding: MaterialStateProperty.all(
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 8),
+                                  ),
+                                  shape: MaterialStateProperty.all(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(10)),
+                                  ),
+                                ),
+                                child: const Text('Done'),
+                              ),
+                            ],
                           ),
-                        );
-
-                        if (updatedTask != null && updatedTask is TaskModel) {
-                          setState(() {
-                            _tasks[index] = {
-                              'title': updatedTask.title,
-                              'description': updatedTask.description,
-                              'time': DateFormat('hh:mm a').format(updatedTask.dueDateTime),
-                              'color': _tasks[index]['color'],
-                            };
-                          });
-                        }
-                      },
-                    );
-                  },
-                ),
+                          ...missedTasks.map((task) {
+                            final isSelected = selectedTasks.contains(task);
+                            return MissedTaskCard(
+                              task: task,
+                              onEdit: () async {
+                                final updatedTask = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        EditTaskScreen(task: task),
+                                  ),
+                                );
+                                if (updatedTask != null &&
+                                    updatedTask is TaskModel) {
+                                  Provider.of<TaskManager>(context,
+                                      listen: false)
+                                      .updateTask(task, updatedTask);
+                                }
+                              },
+                              onDelete: () {
+                                Provider.of<TaskManager>(context,
+                                    listen: false)
+                                    .removeTask(task);
+                              },
+                              isSelected: isSelected,
+                              onCheckboxChanged: (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    selectedTasks.add(task);
+                                  } else {
+                                    selectedTasks.remove(task);
+                                  }
+                                  selectAll = selectedTasks.length ==
+                                      missedTasks.length;
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 70),
+                ],
               ),
-              const SizedBox(height: 10),
-              Center(
+            ),
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
-                    padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  child: const Text('Back', style: TextStyle(color: Colors.white)),
+                  child:
+                  const Text('Back', style: TextStyle(color: Colors.white)),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Confirmation'),
+        content: const Text('Do you want to delete the selected tasks?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () {
+              final taskManager = Provider.of<TaskManager>(context, listen: false);
+              for (var task in selectedTasks) {
+                taskManager.removeTask(task);
+              }
+              selectedTasks.clear();
+              selectAll = false;
+              Navigator.of(context).pop();
+              setState(() {});
+            },
+            child: const Text('Yes'),
+          ),
+        ],
       ),
     );
   }
 }
 
-class TaskCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final String time;
-  final Color color;
-  final VoidCallback onDelete;
+class MissedTaskCard extends StatelessWidget {
+  final TaskModel task;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final bool isSelected;
+  final ValueChanged<bool?> onCheckboxChanged;
 
-  const TaskCard({
-    required this.title,
-    required this.description,
-    required this.time,
-    required this.color,
-    required this.onDelete,
+  const MissedTaskCard({
+    required this.task,
     required this.onEdit,
-  });
+    required this.onDelete,
+    Key? key,
+    required this.isSelected,
+    required this.onCheckboxChanged,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final dueFormatted = DateFormat('EEEE, MMM d, yyyy - hh:mm a').format(task.dueDateTime);
+    final overdueBy = DateTime.now().difference(task.dueDateTime);
+    final overdueText = overdueBy.inMinutes < 60
+        ? 'Missed ${overdueBy.inMinutes} mins ago'
+        : overdueBy.inHours < 24
+        ? 'Missed ${overdueBy.inHours} hrs ago'
+        : 'Missed ${overdueBy.inDays} days ago';
+
+    final cardColor = _getColorForTask(task).withOpacity(0.2);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: color,
-      child: ListTile(
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      color: cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Stack(
           children: [
-            Text(description),
-            Text('Due: $time', style: const TextStyle(fontSize: 12)),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xFF800000)),
-              onPressed: onEdit,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: onCheckboxChanged,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Description: ${task.description}'),
+                          Text('Category: ${task.category ?? 'N/A'}'),
+                          Text('Priority: ${task.priority ?? 'N/A'}'),
+                          Text('Due: $dueFormatted'),
+                          Text('Repeat: ${task.repeat ?? 'None'}'),
+                          Text('Notification: ${task.notification == true ? 'Yes' : 'No'}'),
+                          const SizedBox(height: 4),
+                          Text(
+                            overdueText,
+                            style: const TextStyle(color: Color(0xFF800000)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Color(0xFF800000)),
-              onPressed: onDelete,
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Color(0xFF800000)),
+                    onPressed: onEdit,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Color(0xFF800000)),
+                    onPressed: onDelete,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Color _getColorForTask(TaskModel task) {
+    switch (task.category) {
+      case 'Work':
+        return const Color(0xff6495ED); // Cornflower blue
+      case 'Personal':
+        return const Color(0xffD3D3D3); // Light gray
+      case 'Shopping':
+        return const Color(0xffEC9D41); // Orange
+      case 'Health':
+        return const Color(0xff90EE90); // Light green
+      case 'Habit':
+        return const Color(0xffFFD700); // Gold
+      default:
+        return const Color(0xffD3D3D3);
+    }
   }
 }

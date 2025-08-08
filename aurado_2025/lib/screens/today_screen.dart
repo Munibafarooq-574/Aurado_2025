@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'edit_task_screen.dart';
 import '../models/task.dart' as task_model;
 import 'package:aurado_2025/task_manager.dart';
+import 'dart:async';
+
+
+final Set<String> globalShownMissedTaskIds = {};
 
 class TodayScreen extends StatefulWidget {
   final task_model.TaskModel? newTask;
@@ -20,23 +24,86 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
+
+  Timer? _timer;
+  bool _dialogShown = false;
+  String _currentTime = '';
+  List<String> previouslyVisibleTaskIds = [];
+
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.newTask != null) {
-        Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
-      }
-      if (widget.showSuccessMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Task saved successfully")),
-        );
-      }
+
+    // Initial time set
+    _currentTime = DateFormat('hh:mm a').format(DateTime.now());
+
+    // Timer to update time every second
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _currentTime = DateFormat('hh:mm a').format(DateTime.now());
+      });
     });
+
+
+    // 🔥🔥 ADD THIS BLOCK to insert the new task
+    if (widget.newTask != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final taskManager = Provider.of<TaskManager>(context, listen: false);
+        if (!taskManager.tasks.contains(widget.newTask)) {
+          taskManager.addTask(widget.newTask!);
+        }
+      });
+    }
+    // Show missed task dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration(milliseconds: 100), () {
+        final taskManager = Provider.of<TaskManager>(context, listen: false);
+        final todayTasks = taskManager.getTodayTasks();
+        final now = DateTime.now();
+
+        final missedTasks = todayTasks.where((task) {
+          final isToday = task.dueDateTime.year == now.year &&
+              task.dueDateTime.month == now.month &&
+              task.dueDateTime.day == now.day;
+          final isPast = task.dueDateTime.isBefore(now);
+          return isToday && isPast && !task.isCompleted;
+        }).toList();
+
+        if (missedTasks.isNotEmpty && !_dialogShown) {
+          _dialogShown = true;
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text("Missed Tasks"),
+              content: Text("Missed tasks:\n${missedTasks.map((e) => "• ${e.title}").join("\n")}"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text("OK"),
+                ),
+              ],
+            ),
+          );
+        }
+      });
+    });
+
   }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer to avoid memory leaks
+    super.dispose();
+  }
+
+
+
+
 
   void _deleteTask(task_model.TaskModel task) {
     Provider.of<TaskManager>(context, listen: false).removeTask(task);
+    globalShownMissedTaskIds.remove(task.id);
   }
 
   @override
@@ -245,71 +312,96 @@ class TaskCard extends StatefulWidget {
   @override
   _TaskCardState createState() => _TaskCardState();
 }
-
 class _TaskCardState extends State<TaskCard> {
+  bool tempCompleted = false;
+
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: widget.color,
+      color: widget.task.isCompleted ? Colors.grey.shade300 : Colors.white,
       child: ListTile(
-        leading: Checkbox(
-          activeColor: Colors.black,
-          value: widget.task.isCompleted,
-          onChanged: (bool? value) async {
-            if (value == true) {
-              // Pehle checkbox tick karo
-              setState(() {
-                widget.task.isCompleted = true;
-              });
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StatefulBuilder(
+              builder: (context, setLocalState) {
+                return Checkbox(
+                  value: tempCompleted || widget.task.isCompleted,
+                  onChanged: (bool? value) async {
+                    if (value == true) {
+                      setLocalState(() {
+                        tempCompleted = true;
+                      });
 
-              // Phir confirmation dialog dikhao
-              bool? confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Confirm'),
-                  content: const Text('Do you want to mark this task as completed?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('No'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Yes'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true) {
-                Provider.of<TaskManager>(context, listen: false).markTaskAsCompleted(widget.task);
-              } else {
-                setState(() {
-                  widget.task.isCompleted = false;
-                });
-              }
-            } else {
-              setState(() {
-                widget.task.isCompleted = false;
-              });
-              Provider.of<TaskManager>(context, listen: false).markTaskAsIncomplete(widget.task);
-            }
-          },
+                      bool? confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Confirm'),
+                          content: const Text('Do you want to mark this task as completed?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('No'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Yes'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        setState(() {
+                          widget.task.isCompleted = true;
+                        });
+                        Provider.of<TaskManager>(context, listen: false)
+                            .markTaskAsCompleted(widget.task);
+                      } else {
+                        setLocalState(() {
+                          tempCompleted = false;
+                        });
+                      }
+                    } else {
+                      setState(() {
+                        widget.task.isCompleted = false;
+                      });
+                      Provider.of<TaskManager>(context, listen: false)
+                          .markTaskAsIncomplete(widget.task);
+                    }
+                  },
+                );
+              },
+            ),
+          ],
         ),
-
-
 
         title: Text(
-          widget.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          widget.task.title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            decoration: (tempCompleted || widget.task.isCompleted)
+                ? TextDecoration.lineThrough
+                : null,
+          ),
         ),
+
+        // ✅ Subtitle showing description and due time
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.description),
-            Text(widget.time, style: const TextStyle(fontSize: 12)),
+            if (widget.task.description.isNotEmpty)
+              Text(widget.task.description),
+            Text(
+              'Due: ${widget.task.dueDateTime.month}/${widget.task.dueDateTime.day}/${widget.task.dueDateTime.year} – '
+                  '${TimeOfDay.fromDateTime(widget.task.dueDateTime).format(context)}',
+              style: const TextStyle(fontSize: 12),
+            ),
           ],
         ),
+
+        // ✅ Trailing Edit and Delete buttons
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
