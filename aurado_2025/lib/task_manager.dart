@@ -33,13 +33,18 @@ class TaskManager extends ChangeNotifier {
     final todayStart = DateTime(now.year, now.month, now.day);
     final todayEnd = todayStart.add(Duration(days: 1));
 
-    return _tasks.where((task) {
+    final filteredTasks = _tasks.where((task) {
       final due = task.dueDateTime;
       return !task.isCompleted &&
           (due.isAfter(now) || due.isAtSameMomentAs(now)) &&
           due.isBefore(todayEnd);
     }).toList();
+
+    // Sort filtered tasks by dueDateTime ascending before returning
+    filteredTasks.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
+    return filteredTasks;
   }
+
 
 
 

@@ -29,6 +29,7 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _dialogShown = false;
   String _currentTime = '';
   List<String> previouslyVisibleTaskIds = [];
+  final List<String> categoryOrder = ['Work', 'Personal', 'Shopping', 'Health', 'Habit', 'Other'];
 
 
   @override
@@ -208,18 +209,29 @@ class _TodayScreenState extends State<TodayScreen> {
         return Icons.task;
     }
   }
-
   List<Widget> _buildGroupedTasks(List<task_model.TaskModel> tasks, BuildContext context) {
     final Map<String, List<task_model.TaskModel>> groupedTasks = {};
 
+    // Group tasks by category
     for (var task in tasks) {
       final category = task.category ?? 'Other';
       groupedTasks.putIfAbsent(category, () => []).add(task);
     }
 
-    List<Widget> widgets = [];
-    groupedTasks.forEach((category, taskList) {
+    // Sort each category's tasks by dueDateTime ascending (extra safety)
+    for (var taskList in groupedTasks.values) {
       taskList.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
+    }
+
+    List<Widget> widgets = [];
+    // Define fixed category order
+    final List<String> categoryOrder = ['Work', 'Personal', 'Shopping', 'Health', 'Habit', 'Other'];
+
+    // Show categories in fixed order only if tasks exist in that category
+    for (var category in categoryOrder) {
+      if (!groupedTasks.containsKey(category)) continue;
+
+      // Category header row with icon and name
       widgets.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -240,7 +252,8 @@ class _TodayScreenState extends State<TodayScreen> {
         ),
       );
 
-      widgets.addAll(taskList.map((task) {
+      // Add tasks under this category
+      widgets.addAll(groupedTasks[category]!.map((task) {
         return TaskCard(
           key: ValueKey(task.id),
           task: task,
@@ -250,6 +263,7 @@ class _TodayScreenState extends State<TodayScreen> {
           color: _getColorForTask(task),
           onDelete: () => _deleteTask(task),
           onEdit: () async {
+            // Your existing edit logic here
             try {
               final updatedTask = await Navigator.push(
                 context,
@@ -272,7 +286,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     ],
                   ),
                 );
-                setState(() {});  // <-- Optional but good to have to refresh UI immediately
+                setState(() {});  // Refresh UI immediately
               }
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -282,10 +296,11 @@ class _TodayScreenState extends State<TodayScreen> {
           },
         );
       }));
-    });
+    }
 
     return widgets;
   }
+
 }
 
 class TaskCard extends StatefulWidget {
@@ -319,7 +334,16 @@ class _TaskCardState extends State<TaskCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: widget.task.isCompleted ? Colors.grey.shade300 : Colors.white,
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.task.isCompleted ? Colors.grey.shade300 : Colors.white,
+            border: Border.all(
+              color: widget.color,
+              width: 2,
+            ),
+
+          ),
+
       child: ListTile(
         leading: Row(
           mainAxisSize: MainAxisSize.min,
@@ -416,6 +440,7 @@ class _TaskCardState extends State<TaskCard> {
           ],
         ),
       ),
+        )
     );
   }
 }
