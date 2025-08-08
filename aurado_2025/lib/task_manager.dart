@@ -45,10 +45,36 @@ class TaskManager extends ChangeNotifier {
   void markTaskAsCompleted(TaskModel task) {
     final index = _tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
-      _tasks[index] = _tasks[index].copyWith(isCompleted: true);
+      final now = DateTime.now();
+      final updatedTask = _tasks[index].copyWith(
+        isCompleted: true,
+        completedDateTime: now,
+      );
+      _tasks[index] = updatedTask;
+      print('Task "${task.title}" marked completed at $now');
+      print('Updated task: isCompleted=${updatedTask.isCompleted}, completedDateTime=${updatedTask.completedDateTime}');
       notifyListeners();
+    } else {
+      print('Task not found to mark complete: ${task.title}');
     }
   }
+
+  void markTaskAsIncomplete(TaskModel task) {
+    final index = _tasks.indexWhere((t) => t.id == task.id);
+    if (index != -1) {
+      final updatedTask = _tasks[index].copyWith(
+        isCompleted: false,
+        completedDateTime: null,
+      );
+      _tasks[index] = updatedTask;
+      print('Task "${task.title}" marked incomplete');
+      notifyListeners();
+    } else {
+      print('Task not found to mark incomplete: ${task.title}');
+    }
+  }
+
+
 
   List<TaskModel> getCompletedTasks() {
     return _tasks.where((task) => task.isCompleted).toList();

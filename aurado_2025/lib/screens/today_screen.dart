@@ -221,7 +221,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 }
 
-class TaskCard extends StatelessWidget {
+class TaskCard extends StatefulWidget {
   final Key key;
   final String title;
   final String description;
@@ -243,29 +243,71 @@ class TaskCard extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _TaskCardState createState() => _TaskCardState();
+}
+
+class _TaskCardState extends State<TaskCard> {
+  @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: color,
+      color: widget.color,
       child: ListTile(
         leading: Checkbox(
-          value: task.isCompleted,
-          onChanged: (bool? value) {
+          activeColor: Colors.black,
+          value: widget.task.isCompleted,
+          onChanged: (bool? value) async {
             if (value == true) {
-              Provider.of<TaskManager>(context, listen: false).markTaskAsCompleted(task);
+              // Pehle checkbox tick karo
+              setState(() {
+                widget.task.isCompleted = true;
+              });
+
+              // Phir confirmation dialog dikhao
+              bool? confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Confirm'),
+                  content: const Text('Do you want to mark this task as completed?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('No'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Yes'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                Provider.of<TaskManager>(context, listen: false).markTaskAsCompleted(widget.task);
+              } else {
+                setState(() {
+                  widget.task.isCompleted = false;
+                });
+              }
+            } else {
+              setState(() {
+                widget.task.isCompleted = false;
+              });
+              Provider.of<TaskManager>(context, listen: false).markTaskAsIncomplete(widget.task);
             }
           },
         ),
 
+
+
         title: Text(
-          title,
+          widget.title,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(description),
-            Text(time, style: const TextStyle(fontSize: 12)),
+            Text(widget.description),
+            Text(widget.time, style: const TextStyle(fontSize: 12)),
           ],
         ),
         trailing: Row(
@@ -273,11 +315,11 @@ class TaskCard extends StatelessWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.edit, color: Color(0xFF800000)),
-              onPressed: onEdit,
+              onPressed: widget.onEdit,
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Color(0xFF800000)),
-              onPressed: onDelete,
+              onPressed: widget.onDelete,
             ),
           ],
         ),

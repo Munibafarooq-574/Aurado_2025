@@ -9,6 +9,7 @@ class TaskModel {
   final int minutesBefore;
   final bool notification;
   bool isCompleted;
+  DateTime? completedDateTime;
 
   TaskModel({
     String? id, // Optional ID, auto-generated if not provided
@@ -21,6 +22,7 @@ class TaskModel {
     required this.minutesBefore,
     required this.notification,
     this.isCompleted = false,
+    this.completedDateTime,
     int? timer, // Deprecated parameter, kept for compatibility
   }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -35,7 +37,8 @@ class TaskModel {
         dueDateTime = other.dueDateTime,
         minutesBefore = other.minutesBefore,
         notification = other.notification,
-        isCompleted = other.isCompleted;
+        isCompleted = other.isCompleted,
+  completedDateTime = other.completedDateTime;
 
   /// ✏️ Copy with optional new values (useful for editing tasks)
   TaskModel copyWith({
@@ -49,6 +52,7 @@ class TaskModel {
     int? minutesBefore,
     bool? notification,
     bool? isCompleted,
+    DateTime? completedDateTime,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -61,6 +65,7 @@ class TaskModel {
       minutesBefore: minutesBefore ?? this.minutesBefore,
       notification: notification ?? this.notification,
       isCompleted: isCompleted ?? this.isCompleted,
+      completedDateTime: completedDateTime ?? this.completedDateTime,
     );
   }
 
