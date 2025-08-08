@@ -20,6 +20,8 @@ class UpcomingScreen extends StatefulWidget {
 }
 
 class _UpcomingScreenState extends State<UpcomingScreen> {
+  final List<String> _categoryOrder = ['Work', 'Personal', 'Shopping', 'Health', 'Habit', 'Other'];
+
   @override
   void initState() {
     super.initState();
@@ -150,9 +152,15 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
       groupedTasks.putIfAbsent(category, () => []).add(task);
     }
 
-    List<Widget> widgets = [];
-    groupedTasks.forEach((category, taskList) {
+    // Sort each category's tasks by dueDateTime ascending
+    for (var taskList in groupedTasks.values) {
       taskList.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
+    }
+
+    List<Widget> widgets = [];
+    for (var category in _categoryOrder) {
+      if (!groupedTasks.containsKey(category)) continue;
+
       widgets.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -173,13 +181,13 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
         ),
       );
 
-      widgets.addAll(taskList.map((task) {
+      widgets.addAll(groupedTasks[category]!.map((task) {
         return TaskCard(
           key: ValueKey(task.id),
           title: task.title,
           description: task.description,
           time: 'Due: ${DateFormat('MMMM d, y – hh:mm a').format(task.dueDateTime)} PKT',
-          color: _getColorForTask(task),
+          borderColor: _getColorForTask(task),
           onDelete: () => _deleteTask(task),
           onEdit: () async {
             try {
@@ -204,8 +212,7 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
                     ],
                   ),
                 );
-
-                setState(() {});  // <-- Optional but good to have to refresh UI immediately
+                setState(() {});  // Refresh UI
               }
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -215,10 +222,11 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
           },
         );
       }));
-    });
+    }
 
     return widgets;
   }
+
 }
 
 class TaskCard extends StatelessWidget {
@@ -226,7 +234,7 @@ class TaskCard extends StatelessWidget {
   final String title;
   final String description;
   final String time;
-  final Color color;
+  final Color borderColor;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
@@ -235,7 +243,7 @@ class TaskCard extends StatelessWidget {
     required this.title,
     required this.description,
     required this.time,
-    required this.color,
+    required this.borderColor,
     required this.onDelete,
     required this.onEdit,
   }) : super(key: key);
@@ -244,12 +252,16 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: color,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white, // card background color
+            border: Border.all(
+              color: borderColor,  // category specific border color
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(4),  // same as Card default radius
+          ),
       child: ListTile(
-        leading: Checkbox(
-          value: false,
-          onChanged: (bool? value) {},
-        ),
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -275,6 +287,7 @@ class TaskCard extends StatelessWidget {
           ],
         ),
       ),
+        )
     );
   }
 }

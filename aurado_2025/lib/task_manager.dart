@@ -28,6 +28,7 @@ class TaskManager extends ChangeNotifier {
       return !task.isCompleted && task.dueDateTime.isBefore(now);
     }).toList();
   }
+
   List<TaskModel> getTodayTasks() {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -45,18 +46,19 @@ class TaskManager extends ChangeNotifier {
     return filteredTasks;
   }
 
-
-
-
-
   List<TaskModel> getUpcomingTasks() {
     final now = DateTime.now();
-    return _tasks.where((task) {
+    final today = DateTime(now.year, now.month, now.day);
+
+    final upcoming = _tasks.where((task) {
       final taskDate = DateTime(task.dueDateTime.year, task.dueDateTime.month, task.dueDateTime.day);
-      final today = DateTime(now.year, now.month, now.day);
-      return taskDate.isAfter(today);
+      return taskDate.isAfter(today) && !task.isCompleted;
     }).toList();
+
+    upcoming.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime)); // Sort by due date ascending
+    return upcoming;
   }
+
 
   void markTaskAsCompleted(TaskModel task) {
     final index = _tasks.indexWhere((t) => t.id == task.id);
