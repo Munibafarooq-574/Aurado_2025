@@ -290,41 +290,80 @@ class TaskCardWithCheckbox  extends StatelessWidget {
     required this.onCheckboxChanged,
   }) : super(key: key);
 
+  Color _getBorderColorForCategory(String? category) {
+    switch (category) {
+      case 'Work':
+        return const Color(0xff6495ED); // blue
+      case 'Personal':
+        return const Color(0xFFCC3366); // pink
+      case 'Shopping':
+        return const Color(0xffEC9D41); // orange
+      case 'Health':
+        return const Color(0xff90EE90); // green
+      case 'Habit':
+        return const Color(0xffFFD700); // yellow
+      default:
+        return const Color(0xffA9A9A9); // dark gray for others
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      color: color,
-      child: ListTile(
-        leading: Checkbox(
-          value: isSelected,
-          onChanged: onCheckboxChanged,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: _getBorderColorForCategory(task.category),
+          width: 2,
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
+      ),
+      child: Card(
+        color: Colors.white,
+        elevation: 0, // remove double shadow
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Description: $description'),
-            Text('Category: $category'),
-            Text('Priority: $priority'),
-            Text('Due: $dueDateFormatted'),
-            Text('Repeat: $repeat'),
-            Text('Notification: $notification'),
-            const SizedBox(height: 4),
-            Text(
-              completionText,
-              style: const TextStyle(color: Color(0xFF800000)),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Color(0xFF800000)),
-          onPressed: onDelete,
+        child: ListTile(
+          leading: Checkbox(
+            value: isSelected,
+            onChanged: onCheckboxChanged,
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Description: $description'),
+              Text('Category: $category'),
+              Text('Priority: $priority'),
+              Text('Due: $dueDateFormatted'),
+              Text('Repeat: $repeat'),
+              Text('Notification: $notification'),
+              const SizedBox(height: 4),
+              Text(
+                completionText,
+                style: const TextStyle(color: Color(0xFF800000)),
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete, color: Color(0xFF800000)),
+            onPressed: onDelete,
+          ),
         ),
       ),
     );
+
   }
 }
