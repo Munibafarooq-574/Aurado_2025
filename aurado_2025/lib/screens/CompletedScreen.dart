@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../models/task.dart';
+import '../models/task.dart' as task_model;
+import '../task_manager.dart';
 
 class CompletedScreen extends StatefulWidget {
   @override
@@ -7,31 +11,10 @@ class CompletedScreen extends StatefulWidget {
 }
 
 class _CompletedScreenState extends State<CompletedScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {
-      'title': 'Submit Assignment',
-      'description': 'Uploaded to portal on time.',
-      'time': '08:00 AM PKT',
-      'color': 0xff90EE90, // Light Green
-    },
-    {
-      'title': 'Gym Session',
-      'description': 'Completed 1-hour cardio and strength.',
-      'time': '06:30 PM PKT',
-      'color': 0xffADD8E6, // Light Blue
-    },
-    {
-      'title': 'Meeting with Manager',
-      'description': 'Weekly performance review completed.',
-      'time': '11:00 AM PKT',
-      'color': 0xffFFD700, // Gold
-    },
-  ];
 
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+
+  void _deleteTask(task_model.TaskModel task) {
+    Provider.of<TaskManager>(context, listen: false).removeTask(task);
   }
 
   @override
@@ -40,6 +23,8 @@ class _CompletedScreenState extends State<CompletedScreen> {
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
+
+    final completedTasks = Provider.of<TaskManager>(context).getCompletedTasks();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6), // Light Peach background
@@ -64,18 +49,30 @@ class _CompletedScreenState extends State<CompletedScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _tasks.length,
+                child:
+                completedTasks.isEmpty
+                    ? Center(
+                  child: Text(
+                    'No completed tasks yet!',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                )
+                    : ListView.builder(
+                  itemCount: completedTasks.length,
                   itemBuilder: (context, index) {
+                    final task = completedTasks[index];
                     return TaskCard(
-                      title: _tasks[index]['title']!,
-                      description: _tasks[index]['description']!,
-                      time: _tasks[index]['time']!,
-                      color: Color(_tasks[index]['color'] as int),
-                      onDelete: () => _deleteTask(index),
+                      title: task.title,
+                      description: task.description,
+                      time: DateFormat('hh:mm a').format(task.dueDateTime) + ' PKT',
+                      color: _getColorForTask(task),
+                      onDelete: () {
+                        Provider.of<TaskManager>(context, listen: false).removeTask(task);
+                      },
                     );
                   },
                 ),
+
               ),
               const SizedBox(height: 10),
               Center(
@@ -97,6 +94,24 @@ class _CompletedScreenState extends State<CompletedScreen> {
       ),
     );
   }
+
+  Color _getColorForTask(TaskModel task) {
+    switch (task.category) {
+      case 'Work':
+        return const Color(0xff6495ED);
+      case 'Personal':
+        return const Color(0xffD3D3D3);
+      case 'Shopping':
+        return const Color(0xffEC9D41);
+      case 'Health':
+        return const Color(0xff90EE90);
+      case 'Habit':
+        return const Color(0xffFFD700);
+      default:
+        return const Color(0xffD3D3D3);
+    }
+  }
+
 }
 
 class TaskCard extends StatelessWidget {
@@ -139,6 +154,7 @@ class TaskCard extends StatelessWidget {
     );
   }
 }
+
 
 void main() {
   runApp(MaterialApp(

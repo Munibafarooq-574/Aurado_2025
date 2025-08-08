@@ -176,6 +176,7 @@ class _TodayScreenState extends State<TodayScreen> {
       widgets.addAll(taskList.map((task) {
         return TaskCard(
           key: ValueKey(task.id),
+          task: task,
           title: task.title,
           description: task.description,
           time: 'Due: ${DateFormat('MMMM d, y – hh:mm a').format(task.dueDateTime)} PKT',
@@ -228,6 +229,7 @@ class TaskCard extends StatelessWidget {
   final Color color;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final task_model.TaskModel task;
 
   const TaskCard({
     required this.key,
@@ -237,6 +239,7 @@ class TaskCard extends StatelessWidget {
     required this.color,
     required this.onDelete,
     required this.onEdit,
+    required this.task,
   }) : super(key: key);
 
   @override
@@ -246,9 +249,14 @@ class TaskCard extends StatelessWidget {
       color: color,
       child: ListTile(
         leading: Checkbox(
-          value: false,
-          onChanged: (bool? value) {},
+          value: task.isCompleted,
+          onChanged: (bool? value) {
+            if (value == true) {
+              Provider.of<TaskManager>(context, listen: false).markTaskAsCompleted(task);
+            }
+          },
         ),
+
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.bold),

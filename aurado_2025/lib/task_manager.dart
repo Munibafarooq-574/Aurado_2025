@@ -25,11 +25,13 @@ class TaskManager extends ChangeNotifier {
   List<TaskModel> getTodayTasks() {
     final now = DateTime.now();
     return _tasks.where((task) {
-      return task.dueDateTime.year == now.year &&
+      return !task.isCompleted &&
+          task.dueDateTime.year == now.year &&
           task.dueDateTime.month == now.month &&
           task.dueDateTime.day == now.day;
     }).toList();
   }
+
 
   List<TaskModel> getUpcomingTasks() {
     final now = DateTime.now();
@@ -38,6 +40,18 @@ class TaskManager extends ChangeNotifier {
       final today = DateTime(now.year, now.month, now.day);
       return taskDate.isAfter(today);
     }).toList();
+  }
+
+  void markTaskAsCompleted(TaskModel task) {
+    final index = _tasks.indexWhere((t) => t.id == task.id);
+    if (index != -1) {
+      _tasks[index] = _tasks[index].copyWith(isCompleted: true);
+      notifyListeners();
+    }
+  }
+
+  List<TaskModel> getCompletedTasks() {
+    return _tasks.where((task) => task.isCompleted).toList();
   }
 
   List<TaskModel> getTasksByCategory(String category) {
