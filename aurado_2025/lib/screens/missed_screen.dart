@@ -126,29 +126,28 @@ class _MissedScreenState extends State<MissedScreen> {
                               ),
                             ],
                           ),
-                          ...missedTasks.map((task) {
+                          ...missedTasks.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final task = entry.value;
                             final isSelected = selectedTasks.contains(task);
+
                             return MissedTaskCard(
                               task: task,
+                              index: index, // 👈 Pass index here
                               onEdit: () async {
                                 final updatedTask = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        EditTaskScreen(task: task),
+                                    builder: (_) => EditTaskScreen(task: task),
                                   ),
                                 );
-                                if (updatedTask != null &&
-                                    updatedTask is TaskModel) {
-                                  Provider.of<TaskManager>(context,
-                                      listen: false)
+                                if (updatedTask != null && updatedTask is TaskModel) {
+                                  Provider.of<TaskManager>(context, listen: false)
                                       .updateTask(task, updatedTask);
                                 }
                               },
                               onDelete: () {
-                                Provider.of<TaskManager>(context,
-                                    listen: false)
-                                    .removeTask(task);
+                                Provider.of<TaskManager>(context, listen: false).removeTask(task);
                               },
                               isSelected: isSelected,
                               onCheckboxChanged: (bool? value) {
@@ -158,12 +157,12 @@ class _MissedScreenState extends State<MissedScreen> {
                                   } else {
                                     selectedTasks.remove(task);
                                   }
-                                  selectAll = selectedTasks.length ==
-                                      missedTasks.length;
+                                  selectAll = selectedTasks.length == missedTasks.length;
                                 });
                               },
                             );
                           }).toList(),
+
                         ],
                       ),
                     ),
@@ -234,9 +233,11 @@ class MissedTaskCard extends StatelessWidget {
   final VoidCallback onDelete;
   final bool isSelected;
   final ValueChanged<bool?> onCheckboxChanged;
+  final int index;
 
   const MissedTaskCard({
     required this.task,
+    required this.index,
     required this.onEdit,
     required this.onDelete,
     Key? key,
@@ -254,11 +255,16 @@ class MissedTaskCard extends StatelessWidget {
         ? 'Missed ${overdueBy.inHours} hrs ago'
         : 'Missed ${overdueBy.inDays} days ago';
 
-    final cardColor = _getColorForTask(task).withOpacity(0.2);
+    final borderColor = _getBorderColor(index); // 👉 This sets a cycling color
+    final cardColor = Colors.white; // 👉 Background remains white
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
       color: cardColor,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: borderColor, width: 2),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Stack(
@@ -321,7 +327,18 @@ class MissedTaskCard extends StatelessWidget {
       ),
     );
   }
-
+  // 🎨 Color cycle function
+  Color _getBorderColor(int index) {
+    final colors = [
+      Colors.pink.shade400,
+      Colors.red.shade400,
+      Colors.purple.shade400,
+      Colors.blue.shade400,
+      Colors.orange.shade400,
+      Colors.green.shade400,
+    ];
+    return colors[index % colors.length]; // cycle
+  }
   Color _getColorForTask(TaskModel task) {
     switch (task.category) {
       case 'Work':
