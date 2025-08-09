@@ -142,9 +142,10 @@ class _MissedScreenState extends State<MissedScreen> {
                                   ),
                                 );
                                 if (updatedTask != null && updatedTask is TaskModel) {
-                                  Provider.of<TaskManager>(context, listen: false)
-                                      .updateTask(task, updatedTask);
+                                  Provider.of<TaskManager>(context, listen: false).updateTask(task, updatedTask);
+                                  _showTaskUpdatedDialog(context);
                                 }
+
                               },
                               onDelete: () {
                                 Provider.of<TaskManager>(context, listen: false).removeTask(task);
@@ -202,7 +203,7 @@ class _MissedScreenState extends State<MissedScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Confirmation'),
-        content: const Text('Do you want to delete the selected tasks?'),
+        content: Text('Do you want to delete ${selectedTasks.length} selected task(s)?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -225,6 +226,23 @@ class _MissedScreenState extends State<MissedScreen> {
       ),
     );
   }
+
+  void _showTaskUpdatedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Task Updated Successfully'),
+        content: const Text('The missed task has been updated successfully.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
 
 class MissedTaskCard extends StatelessWidget {

@@ -204,7 +204,7 @@ class _CompletedScreenState extends State<CompletedScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Confirmation'),
-        content: const Text('Do you want to delete the selected tasks?'),
+        content: Text('Do you want to delete ${selectedTasks.length} selected task(s)?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -227,6 +227,7 @@ class _CompletedScreenState extends State<CompletedScreen> {
       ),
     );
   }
+
 }
   /// 🔷 Helper to show how long ago the task was completed
   String _getCompletionTimeText(TaskModel task) {
