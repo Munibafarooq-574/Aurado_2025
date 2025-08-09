@@ -44,14 +44,16 @@ class _WorkScreenState extends State<WorkScreen> {
     if (selectedFilter == 'Completed Tasks') {
       filteredTasks = workTasks.where((task) => task.isCompleted).toList();
     } else if (selectedFilter == 'Missed Tasks') {
-      filteredTasks = workTasks
-          .where((task) =>
-      !task.isCompleted &&
-          task.dueDateTime.isBefore(DateTime.now()))
-          .toList();
+      filteredTasks = workTasks.where((task) =>
+      !task.isCompleted && task.dueDateTime.isBefore(DateTime.now())
+      ).toList();
     } else {
-      filteredTasks = workTasks.where((task) => !task.isCompleted).toList();
+      // All Tasks (excluding missed and completed)
+      filteredTasks = workTasks.where((task) =>
+      !task.isCompleted && task.dueDateTime.isAfter(DateTime.now())
+      ).toList();
     }
+
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBEEE6),
@@ -134,15 +136,23 @@ class _WorkScreenState extends State<WorkScreen> {
                     ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
-                        'No tasks found',
-                        style: TextStyle(
+                        selectedFilter == 'Completed Tasks'
+                            ? 'No completed tasks'
+                            : selectedFilter == 'Missed Tasks'
+                            ? 'No missed tasks'
+                            : 'No pending tasks',
+                        style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Text(
-                        'Try adding or completing tasks to see them here.',
+                        selectedFilter == 'Completed Tasks'
+                            ? 'You have not completed any tasks yet.'
+                            : selectedFilter == 'Missed Tasks'
+                            ? 'No tasks have been missed yet.'
+                            : 'Try adding tasks to get started.',
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -159,6 +169,7 @@ class _WorkScreenState extends State<WorkScreen> {
                   },
                 ),
               ),
+
               const SizedBox(height: 10),
               Center(
                 child: ElevatedButton(

@@ -27,6 +27,22 @@ class CustomTaskCard extends StatelessWidget {
     }
   }
 
+  String getMissedAgoText(DateTime dueTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dueTime);
+
+    if (difference.inSeconds < 60) {
+      return 'Missed: Just now';
+    } else if (difference.inMinutes < 60) {
+      return 'Missed: ${difference.inMinutes} min ago';
+    } else if (difference.inHours < 24) {
+      return 'Missed: ${difference.inHours} hours ago';
+    } else {
+      return 'Missed: ${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final dueDateFormatted = DateFormat('MMM d, yyyy – hh:mm a').format(task.dueDateTime);
@@ -73,22 +89,34 @@ class CustomTaskCard extends StatelessWidget {
               style: const TextStyle(fontSize: 13),
             ),
 
-            // ✅ Show "Completed: x ago" only if task is completed
-            if (task.isCompleted && task.completedDateTime != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  getCompletedAgoText(task.completedDateTime!),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+          if (task.isCompleted && task.completedDateTime != null)
+                 Padding(
+               padding: const EdgeInsets.only(top: 4),
+              child: Text(
+             getCompletedAgoText(task.completedDateTime!),
+              style: const TextStyle(
+            fontSize: 13,
+             fontWeight: FontWeight.bold,
+              color: Colors.green,
                 ),
+                ),
+                )
+              else if (!task.isCompleted && task.dueDateTime.isBefore(DateTime.now()))
+              Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+              getMissedAgoText(task.dueDateTime),
+              style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+              ),
+              ),
               ),
 
 
-            const SizedBox(height: 8),
+
+    const SizedBox(height: 8),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
