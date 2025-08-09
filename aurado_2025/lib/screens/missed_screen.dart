@@ -122,7 +122,7 @@ class _MissedScreenState extends State<MissedScreen> {
                                         BorderRadius.circular(10)),
                                   ),
                                 ),
-                                child: const Text('Done'),
+                                child: const Text('Delete'),
                               ),
                             ],
                           ),
@@ -315,10 +315,7 @@ class MissedTaskCard extends StatelessWidget {
                     icon: const Icon(Icons.edit, color: Color(0xFF800000)),
                     onPressed: onEdit,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Color(0xFF800000)),
-                    onPressed: onDelete,
-                  ),
+
                 ],
               ),
             ),

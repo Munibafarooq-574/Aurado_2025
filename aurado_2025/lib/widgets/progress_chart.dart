@@ -37,6 +37,13 @@ class ProgressChart extends StatelessWidget {
     final totalTasks = todayCount + upcomingCount + completedCount + missedCount;
     print('ProgressChart: Rendering at $now - Today: $todayCount, Upcoming: $upcomingCount, Completed: $completedCount, Missed: $missedCount, Total: $totalTasks');
 
+    final chartData = [
+      ChartData('Today', todayCount.toDouble()),
+      ChartData('Upcoming', upcomingCount.toDouble()),
+      ChartData('Completed', completedCount.toDouble()),
+      ChartData('Missed', missedCount.toDouble()),
+    ].where((item) => item.y > 0).toList();
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
       padding: const EdgeInsets.all(16.0),
@@ -93,6 +100,8 @@ class ProgressChart extends StatelessWidget {
             width: 300,
             height: 300,
             child: SfCircularChart(
+              enableMultiSelection: true,
+              tooltipBehavior: TooltipBehavior(enable: true),
               legend: Legend(
                 isVisible: true,
                 overflowMode: LegendItemOverflowMode.wrap,
@@ -105,46 +114,62 @@ class ProgressChart extends StatelessWidget {
               ),
               series: <CircularSeries>[
                 PieSeries<ChartData, String>(
-                  dataSource: [
+                  dataSource: chartData, // ✅ filtered list
+                  // NOTE: enableSmartLabels removed in newer versions — use labelIntersectAction below
+                   /* dataSource: [
                     ChartData('Today', todayCount.toDouble()),
                     ChartData('Upcoming', upcomingCount.toDouble()),
                     ChartData('Completed', completedCount.toDouble()),
                     ChartData('Missed', missedCount.toDouble()),
-                  ],
+                  ], */
                   xValueMapper: (ChartData data, _) => data.x,
                   yValueMapper: (ChartData data, _) => data.y,
-                  dataLabelMapper: (ChartData data, _) => data.y > 0 ? data.y.toString() : '', // Hide label if value is 0
+                  dataLabelMapper: (ChartData data, _) => data.y.toString(),
                   dataLabelSettings: DataLabelSettings(
                     isVisible: true,
                     labelPosition: ChartDataLabelPosition.inside,
+                    // smart arrangement of overlapping labels:
+                    labelIntersectAction: LabelIntersectAction.shift,
                     textStyle: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: Offset(1, 1),
+                        ),
+                      ],
                     ),
                   ),
                   pointColorMapper: (ChartData data, _) {
                     switch (data.x) {
                       case 'Today':
-                        return Color(0xFF42A5F5); // Vibrant Blue
+                        return Color(0xFF42A5F5);
                       case 'Upcoming':
-                        return Color(0xFFAB47BC); // Vibrant Purple
+                        return Color(0xFFAB47BC);
                       case 'Completed':
-                        return Color(0xFF66BB6A); // Vibrant Green
+                        return Color(0xFF66BB6A);
                       case 'Missed':
-                        return Color(0xFFEF5350); // Vibrant Red
+                        return Color(0xFFEF5350);
                       default:
                         return Colors.grey;
                     }
                   },
                   radius: '90%',
-                  explode: true,
+                  explode: false,
                   explodeAll: true,
                   explodeOffset: '5%',
+                  // use strokeWidth / strokeColor for slice border (NOT borderWidth/borderColor)
+                  strokeWidth: 2.0,
+                  strokeColor: Colors.white,
+                  enableTooltip: true, // optional (series-level)
                 ),
               ],
             ),
           ),
+
           const SizedBox(height: 14.0),
           Wrap(
             alignment: WrapAlignment.center,

@@ -121,7 +121,7 @@ class _CompletedScreenState extends State<CompletedScreen> {
                                         RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       ),
                                     ),
-                                    child: const Text('Done'),
+                                    child: const Text('Delete'),
                                   ),
                                 ],
                               ),
@@ -353,14 +353,11 @@ class TaskCardWithCheckbox  extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 completionText,
-                style: const TextStyle(color: Color(0xFF800000)),
+                style: const TextStyle(color: Color(0xFF4CAF50)),
               ),
             ],
           ),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Color(0xFF800000)),
-            onPressed: onDelete,
-          ),
+
         ),
       ),
     );
