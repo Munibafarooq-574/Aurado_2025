@@ -452,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildDashboard(context),
         ChatbotScreen(),
         NotificationScreen(),
-        AccountScreen(),
+        AccountScreen(initial: 'MF', name: 'Muniba Farooq', email: 'munibaawan574@gmail.com'),
       ][_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'terms_of_services_screen.dart'; // Ensure this file exists
+import 'privacy_policy_screen.dart';    // Ensure this file exists
 
 class AccountScreen extends StatelessWidget {
   final String initial; // For the profile icon (e.g., "MF")
   final String name;   // For the user's full name
   final String email;  // For the user's email
 
-  // Constructor with default test values
   const AccountScreen({
     super.key,
-    this.initial = 'MF',
-    this.name = 'Muniba Farooq',
-    this.email = 'munibaawan574@gmail.com',
+    required this.initial,
+    required this.name,
+    required this.email,
   });
 
   @override
@@ -104,15 +105,35 @@ class AccountScreen extends StatelessWidget {
             // Footer Links
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Text(
-                  'Terms of Service',
-                  style: TextStyle(color: Color(0xFF800000), fontSize: 14),
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TermsOfServiceScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Terms of Service',
+                    style: TextStyle(color: Color(0xFF800000), fontSize: 14),
+                  ),
                 ),
-                SizedBox(width: 30),
-                Text(
-                  'Privacy Policy',
-                  style: TextStyle(color: Color(0xFF800000), fontSize: 14),
+                const SizedBox(width: 30),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PrivacyPolicyScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Privacy Policy',
+                    style: TextStyle(color: Color(0xFF800000), fontSize: 14),
+                  ),
                 ),
               ],
             ),
