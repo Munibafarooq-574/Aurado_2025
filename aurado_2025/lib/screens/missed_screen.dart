@@ -65,11 +65,19 @@ class _MissedScreenState extends State<MissedScreen> {
                   Expanded(
                     child: missedTasks.isEmpty
                         ? Center(
-                      child: Text(
-                        'No missed tasks!',
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.event_busy, size: 50, color: Colors.grey),
+                          SizedBox(height: 10),
+                          Text(
+                            "No missed tasks!",
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                        ],
                       ),
                     )
+
                         : SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Column(

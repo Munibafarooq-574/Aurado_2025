@@ -68,9 +68,16 @@ class _CompletedScreenState extends State<CompletedScreen> {
                         final completedTasks = taskManager.getCompletedTasks();
                         if (completedTasks.isEmpty) {
                           return Center(
-                            child: Text(
-                              'No completed tasks yet!',
-                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle_outline, size: 50, color: Colors.grey),
+                                SizedBox(height: 10),
+                                Text(
+                                  "No completed tasks yet!",
+                                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                                ),
+                              ],
                             ),
                           );
                         }
