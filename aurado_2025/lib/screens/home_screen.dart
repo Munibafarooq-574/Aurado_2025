@@ -5,6 +5,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'create_a_task_screen.dart';
 import 'notification_test_screen.dart';
 import 'chatbot_screen.dart';
+import 'account_screen.dart';
 import 'today_screen.dart';
 import 'UpcomingScreen.dart';
 import 'CompletedScreen.dart';
@@ -451,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildDashboard(context),
         ChatbotScreen(),
         NotificationScreen(),
-        _buildAccount(),
+        AccountScreen(),
       ][_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
