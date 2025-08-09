@@ -16,12 +16,18 @@ import '../models/task.dart' as task_model;
 
 class CreateTaskScreen extends StatefulWidget {
   final task_model.TaskModel? task;
+  final Function(task_model.TaskModel) onTaskCreated; // <-- callback
 
-  const CreateTaskScreen({Key? key, this.task}) : super(key: key);
+  const CreateTaskScreen({
+    Key? key,
+    this.task,
+    required this.onTaskCreated,  // make it required
+  }) : super(key: key);
 
   @override
   _CreateTaskScreenState createState() => _CreateTaskScreenState();
 }
+
 
 
 class _CreateTaskScreenState extends State<CreateTaskScreen> {
@@ -630,6 +636,6 @@ extension on task_model.TaskModel {
 
 void main() {
   runApp(MaterialApp(
-    home: CreateTaskScreen(),
+    home: CreateTaskScreen(onTaskCreated: (TaskModel ) {  },),
   ));
 }

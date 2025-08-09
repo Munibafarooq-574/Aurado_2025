@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'create_a_task_screen.dart';
-import '../models/chart_data.dart';
 import 'notification_test_screen.dart';
 import 'chatbot_screen.dart';
 import 'today_screen.dart';
@@ -13,18 +14,10 @@ import 'PersonalScreen.dart';
 import 'HealthScreen.dart';
 import 'ShoppingScreen.dart';
 import 'HabitScreen.dart';
-
-class Task {
-  final String title;
-  final String category; // Work, Personal, etc.
-  final String status;   // Today, Upcoming, Completed, Missed
-
-  Task({
-    required this.title,
-    required this.category,
-    required this.status,
-  });
-}
+import '../widgets/progress_chart.dart';
+import '../models/task.dart';
+import '../models/chart_data.dart';
+import 'package:aurado_2025/task_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,23 +29,32 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final String _username = 'Muniba';
+  Timer? _timer;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
-  // Sample tasks list
-  final List<Task> tasks = [
-    Task(title: 'Email Client', category: 'Work', status: 'Today'),
-    Task(title: 'Yoga', category: 'Health', status: 'Completed'),
-    Task(title: 'Buy Groceries', category: 'Shopping', status: 'Missed'),
-    Task(title: 'Read Book', category: 'Personal', status: 'Upcoming'),
-    Task(title: 'Walk', category: 'Habit', status: 'Today'),
-    Task(title: 'Project Report', category: 'Work', status: 'Completed'),
-    Task(title: 'Meditate', category: 'Habit', status: 'Upcoming'),
-    Task(title: 'Doctor Appointment', category: 'Health', status: 'Upcoming'),
-    Task(title: 'Laundry', category: 'Personal', status: 'Missed'),
-    Task(title: 'Order Supplies', category: 'Shopping', status: 'Today'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      print('HomeScreen: Timer triggered rebuild at ${DateTime.now()}');
+      setState(() {});
+    });
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
 
-  // Calculate category counts for Bar Chart
-  Map<String, int> getCategoryCounts(List<Task> tasks) {
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Map<String, int> getCategoryCounts(List<TaskModel> tasks) {
     final categories = ['Work', 'Personal', 'Shopping', 'Health', 'Habit'];
     return {
       for (var category in categories)
@@ -60,185 +62,239 @@ class _HomeScreenState extends State<HomeScreen> {
     };
   }
 
-  // Calculate status percentages for Pie Chart
-  Map<String, double> getStatusPercentages(List<Task> tasks) {
-    final statusLabels = ['Today', 'Upcoming', 'Completed', 'Missed'];
-    int total = tasks.length;
-    return {
-      for (var status in statusLabels)
-        status: total == 0 ? 0 : (tasks.where((task) => task.status == status).length / total) * 100
-    };
-  }
+  Widget _buildDashboard(BuildContext context) {
+    return Consumer<TaskManager>(
+      builder: (context, taskManager, child) {
+        final tasks = taskManager.tasks;
+        print('HomeScreen: Tasks updated - ${tasks.length} tasks'); // Debug: Check task count
 
-  Widget _buildDashboard() {
-    // Prepare chart data dynamically
-    final categoryCounts = getCategoryCounts(tasks);
-    final barChartData = categoryCounts.entries
-        .map((e) => ChartData(e.key, e.value.toDouble())) // convert int to double
-        .toList();
+        // Filter tasks based on search query
+        final filteredTasks = _searchQuery.isEmpty
+            ? tasks
+            : tasks.where((task) =>
+        (task.title?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase()) ||
+            (task.description?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase()))
+            .toList();
+        print('HomeScreen: Search query: $_searchQuery, Filtered tasks: ${filteredTasks.length}'); // Debug: Check filtered results
 
-    final statusPercentages = getStatusPercentages(tasks);
-    final pieData = statusPercentages.entries
-        .map((e) => ChartData(e.key, e.value))
-        .toList();
+        final categoryCounts = getCategoryCounts(tasks);
+        final barChartData = categoryCounts.entries
+            .map((e) => ChartData(e.key, e.value.toDouble()))
+            .toList();
 
-    String initial = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
+        String initial = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // User Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.transparent,
-                        border: Border.all(color: Color(0xFF800000), width: 2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          initial,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF800000),
+                    Row(
+                      children: [
+                        Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.transparent,
+                            border: Border.all(color: const Color(0xFF800000), width: 2),
+                          ),
+                          child: Center(
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF800000),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          '$_username 🌸',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Welcome',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              '$_username 🌸',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                            ),
+                          ],
                         ),
                       ],
                     ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateTaskScreen(
+                              onTaskCreated: (TaskModel newTask) {
+                                Provider.of<TaskManager>(context, listen: false).addTask(newTask);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        textStyle: const TextStyle(fontSize: 14),
+                      ),
+                      child: const Text('Create a Task'),
+                    ),
                   ],
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CreateTaskScreen(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  }, // Ensure onChanged triggers setState
+                  decoration: InputDecoration(
+                    hintText: 'Search Tasks',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {
+                          _searchQuery = '';
+                        });
+                      },
+                    )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (_searchQuery.isNotEmpty) ...[
+                  const Text('Search Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  filteredTasks.isEmpty
+                      ? const Center(
+                    child: Text(
+                      'No tasks found',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  )
+                      : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = filteredTasks[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          title: Text(task.title ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(task.description ?? ''),
+                          trailing: Text(task.category ?? ''),
+                          onTap: () {
+                            if (task.category == 'Work') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => WorkScreen()),
+                              );
+                            } else if (task.category == 'Personal') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => PersonalScreen()),
+                              );
+                            } else if (task.category == 'Health') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => HealthScreen()),
+                              );
+                            } else if (task.category == 'Shopping') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ShoppingScreen()),
+                              );
+                            } else if (task.category == 'Habit') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => HabitScreen()),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                const Text('Task Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildCategoryIcon('Work', 'assets/work.png'),
+                    _buildCategoryIcon('Personal', 'assets/personal.png'),
+                    _buildCategoryIcon('Health', 'assets/health.png'),
+                    _buildCategoryIcon('Shopping', 'assets/shopping.png'),
+                    _buildCategoryIcon('Habit', 'assets/Habit.png'),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildTaskCard('Today', 'assets/Today.png'),
+                      const SizedBox(width: 8),
+                      _buildTaskCard('Upcoming', 'assets/Upcoming.png'),
+                      const SizedBox(width: 8),
+                      _buildTaskCard('Completed', 'assets/completed.png'),
+                      const SizedBox(width: 8),
+                      _buildTaskCard('Missed', 'assets/Missed.png'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Bar Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 250,
+                  child: SfCartesianChart(
+                    primaryXAxis: const CategoryAxis(),
+                    series: <CartesianSeries>[
+                      ColumnSeries<ChartData, String>(
+                        dataSource: barChartData,
+                        xValueMapper: (ChartData data, _) => data.x,
+                        yValueMapper: (ChartData data, _) => data.y,
+                        color: const Color(0xFF800000),
+                        dataLabelSettings: const DataLabelSettings(isVisible: true),
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    textStyle: TextStyle(fontSize: 14),
+                    ],
                   ),
-                  child: Text('Create a Task'),
                 ),
-
+                const SizedBox(height: 16),
+                const Text('Tasks Status Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ProgressChart(tasks: tasks),
               ],
             ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search Tasks',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            Text('Task Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildCategoryIcon('Work', 'assets/work.png'),
-                _buildCategoryIcon('Personal', 'assets/personal.png'),
-                _buildCategoryIcon('Health', 'assets/health.png'),
-                _buildCategoryIcon('Shopping', 'assets/shopping.png'),
-                _buildCategoryIcon('Habit', 'assets/Habit.png'),
-              ],
-            ),
-            SizedBox(height: 16),
-            Text('Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildTaskCard('Today', 'assets/Today.png'),
-                  SizedBox(width: 8),
-                  _buildTaskCard('Upcoming', 'assets/Upcoming.png'),
-                  SizedBox(width: 8),
-                  _buildTaskCard('Completed', 'assets/completed.png'),
-                  SizedBox(width: 8),
-                  _buildTaskCard('Missed', 'assets/Missed.png'),
-                ],
-              ),
-            ),
-            SizedBox(height: 16),
-            Text('Pie Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            SizedBox(
-              height: 250,
-              child: SfCircularChart(
-                series: <CircularSeries>[
-                  PieSeries<ChartData, String>(
-                    dataSource: pieData,
-                    xValueMapper: (ChartData data, _) => data.x,
-                    yValueMapper: (ChartData data, _) => data.y,
-                    dataLabelSettings: DataLabelSettings(isVisible: true),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16),
-            Text('Bar Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            SizedBox(
-              height: 250,
-              child: SfCartesianChart(
-                primaryXAxis: CategoryAxis(),
-                series: <CartesianSeries>[
-                  ColumnSeries<ChartData, String>(
-                    dataSource: barChartData,
-                    xValueMapper: (ChartData data, _) => data.x,
-                    yValueMapper: (ChartData data, _) => data.y,
-                    color: Color(0xFF800000),
-                    dataLabelSettings: DataLabelSettings(isVisible: true),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  //Widget _buildChatbot() => Center(child: Text('Chatbot Screen'));
-  //Widget _buildNotifications() => Center(child: Text('Notifications Screen'));
-  Widget _buildAccount() => Center(child: Text('Account Screen'));
-
-  late final List<Widget> _screens = [
-    _buildDashboard(),
-    ChatbotScreen(),
-    NotificationScreen(),
-    _buildAccount(),
-  ];
+  Widget _buildAccount() => const Center(child: Text('Account Screen'));
 
   Widget _buildCategoryIcon(String label, String assetPath) {
     return GestureDetector(
@@ -248,29 +304,25 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             MaterialPageRoute(builder: (context) => WorkScreen()),
           );
-        }
-        else if (label == 'Personal') {
+        } else if (label == 'Personal') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => PersonalScreen()),
           );
-        }
-        else if (label == 'Health') {
+        } else if (label == 'Health') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => HealthScreen()),
           );
-        }
-        else if (label == 'Shopping') {
+        } else if (label == 'Shopping') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ShoppingScreen()),
           );
-        }
-        else if (label == 'Habit') {
+        } else if (label == 'Habit') {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) =>   HabitScreen()),
+            MaterialPageRoute(builder: (context) => HabitScreen()),
           );
         }
       },
@@ -281,14 +333,14 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Color(0xFF800000), width: 2),
+              border: Border.all(color: const Color(0xFF800000), width: 2),
             ),
             child: ClipOval(
               child: Image.asset(assetPath, width: 40, height: 40, fit: BoxFit.contain),
             ),
           ),
-          SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -297,24 +349,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTaskCard(String title, String assetPath) {
     Color backgroundColor;
     if (title == 'Completed') {
-      backgroundColor = Color(0xFFFFD700);
+      backgroundColor = const Color(0xFFFFD700);
     } else if (title == 'Upcoming') {
-      backgroundColor = Color(0xFFD560B8);
+      backgroundColor = const Color(0xFFD560B8);
     } else if (title == 'Missed') {
-      backgroundColor = Color(0xFF60D591);
+      backgroundColor = const Color(0xFF60D591);
     } else {
-      backgroundColor = Color(0xFF9F60D5);
+      backgroundColor = const Color(0xFF9F60D5);
     }
 
     return Container(
       width: 124,
       height: 155,
-      padding: EdgeInsets.all(12.0),
-      margin: EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12.0),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(64), offset: Offset(0, 4), blurRadius: 4)],
+        boxShadow: const [BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 4)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -322,18 +374,18 @@ class _HomeScreenState extends State<HomeScreen> {
           Stack(
             alignment: Alignment.center,
             children: [
-              Container(width: 65, height: 65, decoration: BoxDecoration(color: Color(0x76C4C4C4), shape: BoxShape.circle)),
-              Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+              Container(width: 65, height: 65, decoration: const BoxDecoration(color: Color(0x76C4C4C4), shape: BoxShape.circle)),
+              Container(width: 50, height: 50, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
               Image.asset(assetPath, width: 40, height: 40, fit: BoxFit.contain),
             ],
           ),
-          SizedBox(height: 22),
+          const SizedBox(height: 22),
           SizedBox(
             width: 100,
             height: 30,
             child: Container(
-              decoration: BoxDecoration(
-                boxShadow: [BoxShadow(color: Colors.black.withAlpha(64), offset: Offset(0, 4), blurRadius: 4)],
+              decoration: const BoxDecoration(
+                boxShadow: [BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 4)],
               ),
               child: TextButton(
                 onPressed: () {
@@ -360,18 +412,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: Color(0x80C4C4C4),
+                  backgroundColor: const Color(0x80C4C4C4),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: EdgeInsets.zero,
                 ),
                 child: Text(
                   title,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
                   textAlign: TextAlign.center,
                 ),
               ),
-
-
             ),
           ),
         ],
@@ -391,13 +441,18 @@ class _HomeScreenState extends State<HomeScreen> {
               : _selectedIndex == 2
               ? 'Notifications'
               : 'Account',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
-      body: _screens[_selectedIndex],
+      body: [
+        _buildDashboard(context),
+        ChatbotScreen(),
+        NotificationScreen(),
+        _buildAccount(),
+      ][_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).primaryColor,
