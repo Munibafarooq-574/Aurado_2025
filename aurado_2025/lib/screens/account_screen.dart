@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'terms_of_services_screen.dart'; // Ensure this file exists
 import 'privacy_policy_screen.dart';    // Ensure this file exists
-
+import 'signout_screen.dart';
 class AccountScreen extends StatelessWidget {
   final String initial; // For the profile icon (e.g., "MF")
   final String name;   // For the user's full name
@@ -98,7 +98,12 @@ class AccountScreen extends StatelessWidget {
               title: const Text('Sign Out'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                // Implement Sign Out functionality
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SignoutScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 24),

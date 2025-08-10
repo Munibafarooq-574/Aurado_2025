@@ -5,6 +5,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'screens/home_screen.dart'; // Adjust to your dashboard or home screen
 import 'task_manager.dart';
+import 'screens/login_screen.dart'; // Your login screen
 
 // Notification permission request
 Future<void> requestNotificationPermission() async {
@@ -112,7 +113,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const HomeScreen(), // Use HomeScreen or TodayScreen as needed
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/login': (context) => const LoginScreen(),
+        // add other routes here if you want
+      },
     );
   }
 }
