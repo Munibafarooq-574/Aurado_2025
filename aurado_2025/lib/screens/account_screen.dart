@@ -6,6 +6,7 @@ import 'terms_of_services_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'signout_screen.dart';
 
+
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
@@ -30,24 +31,24 @@ class AccountScreen extends StatelessWidget {
             // Profile Section
             Row(
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF800000),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _getInitials(user.username),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: const Color(0xFF800000),
+                  backgroundImage: user.profileImage != null
+                      ? FileImage(user.profileImage!)
+                      : null,
+                  child: user.profileImage == null
+                      ? Text(
+                    _getInitials(user.username),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                  ),
+                  )
+                      : null,
                 ),
+
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

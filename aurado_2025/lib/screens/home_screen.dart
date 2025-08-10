@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-
 import 'create_a_task_screen.dart';
 import 'notification_test_screen.dart';
 import 'chatbot_screen.dart';
@@ -18,6 +17,7 @@ import 'ShoppingScreen.dart';
 import 'HabitScreen.dart';
 import '../widgets/progress_chart.dart';
 import '../models/task.dart';
+import '../models/user.dart';
 import '../models/chart_data.dart';
 import 'package:aurado_2025/task_manager.dart';
 import '../providers/user_provider.dart';  // Import UserProvider
@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return initials.isNotEmpty ? initials : '?';
   }
 
-  Widget _buildDashboard(BuildContext context, String username) {
+  Widget _buildDashboard(BuildContext context, User user) {
     return Consumer<TaskManager>(
       builder: (context, taskManager, child) {
         final tasks = taskManager.tasks;
@@ -92,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
             .map((e) => ChartData(e.key, e.value.toDouble()))
             .toList();
 
+        final username = user.username;
         String initial = username.isNotEmpty ? _getInitials(username) : 'U';
 
         return Padding(
@@ -107,25 +108,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.transparent,
-                            border: Border.all(color: const Color(0xFF800000), width: 2),
-                          ),
-                          child: Center(
-                            child: Text(
-                              initial,
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF800000),
-                              ),
+                        CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Color(0xFF800000),
+                          backgroundImage: user.profileImage != null
+                              ? FileImage(user.profileImage!)
+                              : null,
+                          child: user.profileImage == null
+                              ? Text(
+                            initial,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          ),
+                          )
+                              : null,
                         ),
+
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
       ),
       body: [
-        _buildDashboard(context, user.username), // Pass username to dashboard
+        _buildDashboard(context, user), // Pass username to dashboard
          ChatbotScreen(),
           NotificationScreen(),
         const AccountScreen(),

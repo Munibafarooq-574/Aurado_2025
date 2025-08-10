@@ -20,6 +20,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
 
+  bool _isCurrentPasswordVisible = false;  // Add this
+  bool _isNewPasswordVisible = false;      // And this
 
 
   @override
@@ -33,6 +35,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _firstNameController.text = names.isNotEmpty ? names[0] : '';
     _lastNameController.text = names.length > 1 ? names[1] : '';
     _emailController.text = user.email;
+
+    // ✅ Load profile image from provider
+    if (user.profileImage != null) {
+      _profileImage = File(user.profileImage!.path);
+    }
   }
 
   @override
@@ -45,7 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // 1. _isPasswordStrong ko yahan define karo (class level method)
+
   bool _isPasswordStrong(String pwd) {
     if (pwd.length < 6) return false;
     if (!RegExp(r'(?=.*[A-Z])').hasMatch(pwd)) return false; // uppercase check
@@ -57,7 +64,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // Toggle this for testing or real initials
   bool testingMode = true;
 
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(String label, {Widget? suffixIcon}) {
     return InputDecoration(
       labelText: label,
       filled: true,
@@ -75,6 +82,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderSide: const BorderSide(color: Color(0xff800000), width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      suffixIcon: suffixIcon,
     );
   }
 
@@ -135,9 +143,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _getInitials(String firstName, String lastName) {
     String firstInitial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
     String lastInitial = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
-    String initials = firstInitial + lastInitial;
-    return initials.isNotEmpty ? initials : '?';
+    return '$firstInitial$lastInitial';
   }
+
 
   Future<bool?> _showSaveConfirmationDialog() {
     return showDialog<bool>(
@@ -190,25 +198,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: const Color(0xFF800000),
-                  backgroundImage:
-                  _profileImage != null ? FileImage(_profileImage!) : null,
+                  backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
                   child: _profileImage == null
-                      ? (testingMode
-                      ? const Text(
-                    'MF',
-                    style:
-                    TextStyle(fontSize: 30, color: Colors.white),
+                      ? (_firstNameController.text.trim().isEmpty &&
+                      _lastNameController.text.trim().isEmpty
+                      ? const Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.white,
                   )
                       : Text(
                     _getInitials(
-                      _firstNameController.text,
-                      _lastNameController.text,
+                      _firstNameController.text.trim(),
+                      _lastNameController.text.trim(),
                     ),
-                    style: const TextStyle(
-                        fontSize: 30, color: Colors.white),
+                    style: const TextStyle(fontSize: 30, color: Colors.white),
                   ))
                       : null,
                 ),
+
                 IconButton(
                   icon: const Icon(Icons.camera_alt, color: Colors.white),
                   onPressed: _showImageSourceDialog,
@@ -224,6 +232,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: TextField(
                     decoration: _inputDecoration('First Name'),
                     controller: _firstNameController,
+                    onChanged: (_) => setState(() {}), // Refresh initials instantly
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -231,6 +240,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: TextField(
                     decoration: _inputDecoration('Last Name'),
                     controller: _lastNameController,
+                    onChanged: (_) => setState(() {}),
                   ),
                 ),
               ],
@@ -243,15 +253,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 50),
             TextField(
-              decoration: _inputDecoration('Current Password'),
+              decoration: _inputDecoration(
+                'Current Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isCurrentPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isCurrentPasswordVisible = !_isCurrentPasswordVisible;
+                    });
+                  },
+                ),
+              ),
               controller: _passwordController,
-              obscureText: true,
+              obscureText: !_isCurrentPasswordVisible,
             ),
             const SizedBox(height: 50),
             TextField(
-              decoration: _inputDecoration('New Password'),
+              decoration: _inputDecoration(
+                'New Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isNewPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isNewPasswordVisible = !_isNewPasswordVisible;
+                    });
+                  },
+                ),
+              ),
               controller: _newPasswordController,
-              obscureText: true,
+              obscureText: !_isNewPasswordVisible,
             ),
             const SizedBox(height: 60),
             Row(
@@ -274,13 +314,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       final password = _passwordController.text;
                       final newPassword = _newPasswordController.text;
 
-                      // Required fields check
-                      if (firstName.isEmpty || lastName.isEmpty || email.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill all required fields')),
-                        );
-                        return;
-                      }
 
                       // Email validation
                       final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
@@ -320,15 +353,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         return;
                       }
 
-
                       // Combine firstName and lastName as username
                       String updatedUsername = "$firstName $lastName";
 
                       // Update provider data
-                      userProvider.updateUser(
-                        username: updatedUsername,
-                        email: email,
-                      );
+                      if (_profileImage == null) {
+                        userProvider.updateUser(
+                          username: updatedUsername,
+                          email: email,
+                          clearProfileImage: true,
+                        );
+                      } else {
+                        userProvider.updateUser(
+                          username: updatedUsername,
+                          email: email,
+                          profileImage: _profileImage,
+                        );
+                      }
                       // If confirmed = true, proceed with saving
                       // Update user profile here, then show success snackbar
                       ScaffoldMessenger.of(context).showSnackBar(
