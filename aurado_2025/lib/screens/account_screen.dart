@@ -5,7 +5,7 @@ import ' edit_profile_screen.dart';
 import 'terms_of_services_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'signout_screen.dart';
-
+import 'FAQs_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -91,7 +91,10 @@ class AccountScreen extends StatelessWidget {
               title: const Text('FAQs/Help Centre'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                // Implement FAQs/Help Centre navigation or functionality
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FAQsScreen()),
+                );
               },
             ),
             ListTile(
