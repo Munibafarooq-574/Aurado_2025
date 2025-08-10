@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+
 import 'create_a_task_screen.dart';
 import 'notification_test_screen.dart';
 import 'chatbot_screen.dart';
@@ -19,6 +20,7 @@ import '../widgets/progress_chart.dart';
 import '../models/task.dart';
 import '../models/chart_data.dart';
 import 'package:aurado_2025/task_manager.dart';
+import '../providers/user_provider.dart';  // Import UserProvider
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,7 +31,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final String _username = 'Muniba';
   Timer? _timer;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      print('HomeScreen: Timer triggered rebuild at ${DateTime.now()}');
+      // Periodic rebuild
       setState(() {});
     });
     _searchController.addListener(() {
@@ -63,27 +64,35 @@ class _HomeScreenState extends State<HomeScreen> {
     };
   }
 
-  Widget _buildDashboard(BuildContext context) {
+  String _getInitials(String fullName) {
+    List<String> parts = fullName.split(' ');
+    String initials = '';
+    if (parts.isNotEmpty) initials += parts[0][0].toUpperCase();
+    if (parts.length > 1) initials += parts[1][0].toUpperCase();
+    return initials.isNotEmpty ? initials : '?';
+  }
+
+  Widget _buildDashboard(BuildContext context, String username) {
     return Consumer<TaskManager>(
       builder: (context, taskManager, child) {
         final tasks = taskManager.tasks;
-        print('HomeScreen: Tasks updated - ${tasks.length} tasks'); // Debug: Check task count
 
         // Filter tasks based on search query
         final filteredTasks = _searchQuery.isEmpty
             ? tasks
             : tasks.where((task) =>
-        (task.title?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase()) ||
-            (task.description?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase()))
+        (task.title?.toLowerCase() ?? '')
+            .contains(_searchQuery.toLowerCase()) ||
+            (task.description?.toLowerCase() ?? '')
+                .contains(_searchQuery.toLowerCase()))
             .toList();
-        print('HomeScreen: Search query: $_searchQuery, Filtered tasks: ${filteredTasks.length}'); // Debug: Check filtered results
 
         final categoryCounts = getCategoryCounts(tasks);
         final barChartData = categoryCounts.entries
             .map((e) => ChartData(e.key, e.value.toDouble()))
             .toList();
 
-        String initial = _username.isNotEmpty ? _username[0].toUpperCase() : 'U';
+        String initial = username.isNotEmpty ? _getInitials(username) : 'U';
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
@@ -92,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Profile + Welcome + Create Task Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -125,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              '$_username 🌸',
+                              '$username 🌸',
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                             ),
                           ],
@@ -154,13 +164,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
+
+                // Search field
                 TextField(
                   controller: _searchController,
                   onChanged: (value) {
                     setState(() {
                       _searchQuery = value;
                     });
-                  }, // Ensure onChanged triggers setState
+                  },
                   decoration: InputDecoration(
                     hintText: 'Search Tasks',
                     prefixIcon: const Icon(Icons.search),
@@ -180,7 +192,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
+                // Search Results
                 if (_searchQuery.isNotEmpty) ...[
                   const Text('Search Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -204,31 +219,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           subtitle: Text(task.description ?? ''),
                           trailing: Text(task.category ?? ''),
                           onTap: () {
-                            if (task.category == 'Work') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => WorkScreen()),
-                              );
-                            } else if (task.category == 'Personal') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => PersonalScreen()),
-                              );
-                            } else if (task.category == 'Health') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => HealthScreen()),
-                              );
-                            } else if (task.category == 'Shopping') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => ShoppingScreen()),
-                              );
-                            } else if (task.category == 'Habit') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => HabitScreen()),
-                              );
+                            switch (task.category) {
+                              case 'Work':
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => WorkScreen()));
+                                break;
+                              case 'Personal':
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => PersonalScreen()));
+                                break;
+                              case 'Health':
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => HealthScreen()));
+                                break;
+                              case 'Shopping':
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => ShoppingScreen()));
+                                break;
+                              case 'Habit':
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => HabitScreen()));
+                                break;
                             }
                           },
                         ),
@@ -237,6 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
+
+                // Category Icons
                 const Text('Task Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Row(
@@ -249,7 +257,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildCategoryIcon('Habit', 'assets/Habit.png'),
                   ],
                 ),
+
                 const SizedBox(height: 16),
+
+                // Task Cards
                 const Text('Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -265,7 +276,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
+                // Bar Chart
                 const Text('Bar Chart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -283,7 +297,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
+                // Progress Chart
                 const Text('Tasks Status Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 ProgressChart(tasks: tasks),
@@ -295,36 +312,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAccount() => const Center(child: Text('Account Screen'));
-
   Widget _buildCategoryIcon(String label, String assetPath) {
     return GestureDetector(
       onTap: () {
-        if (label == 'Work') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => WorkScreen()),
-          );
-        } else if (label == 'Personal') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => PersonalScreen()),
-          );
-        } else if (label == 'Health') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => HealthScreen()),
-          );
-        } else if (label == 'Shopping') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ShoppingScreen()),
-          );
-        } else if (label == 'Habit') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => HabitScreen()),
-          );
+        switch (label) {
+          case 'Work':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => WorkScreen()));
+            break;
+          case 'Personal':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => PersonalScreen()));
+            break;
+          case 'Health':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => HealthScreen()));
+            break;
+          case 'Shopping':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => ShoppingScreen()));
+            break;
+          case 'Habit':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => HabitScreen()));
+            break;
         }
       },
       child: Column(
@@ -390,26 +396,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: TextButton(
                 onPressed: () {
-                  if (title == 'Today') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TodayScreen()),
-                    );
-                  } else if (title == 'Upcoming') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => UpcomingScreen()),
-                    );
-                  } else if (title == 'Completed') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CompletedScreen()),
-                    );
-                  } else if (title == 'Missed') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MissedScreen()),
-                    );
+                  switch (title) {
+                    case 'Today':
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => TodayScreen()));
+                      break;
+                    case 'Upcoming':
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => UpcomingScreen()));
+                      break;
+                    case 'Completed':
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => CompletedScreen()));
+                      break;
+                    case 'Missed':
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => MissedScreen()));
+                      break;
                   }
                 },
                 style: TextButton.styleFrom(
@@ -430,8 +429,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Main build method
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user; // Get current user
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -449,10 +451,10 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
       ),
       body: [
-        _buildDashboard(context),
-        ChatbotScreen(),
-        NotificationScreen(),
-        AccountScreen(initial: 'MF', name: 'Muniba Farooq', email: 'munibaawan574@gmail.com'),
+        _buildDashboard(context, user.username), // Pass username to dashboard
+         ChatbotScreen(),
+          NotificationScreen(),
+        const AccountScreen(),
       ][_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

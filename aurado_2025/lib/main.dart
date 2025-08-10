@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'screens/home_screen.dart'; // Adjust to your dashboard or home screen
 import 'task_manager.dart';
 import 'screens/login_screen.dart'; // Your login screen
-
+import 'providers/user_provider.dart';
 // Notification permission request
 Future<void> requestNotificationPermission() async {
   final status = await Permission.notification.status;
@@ -39,8 +39,11 @@ void main() async {
 
   // Run the app wrapped with ChangeNotifierProvider for TaskManager
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => TaskManager(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => TaskManager()),
+      ],
       child: const MyApp(),
     ),
   );

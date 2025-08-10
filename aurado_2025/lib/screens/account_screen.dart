@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
-import 'terms_of_services_screen.dart'; // Ensure this file exists
-import 'privacy_policy_screen.dart';    // Ensure this file exists
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import ' edit_profile_screen.dart';
+import 'terms_of_services_screen.dart';
+import 'privacy_policy_screen.dart';
 import 'signout_screen.dart';
-class AccountScreen extends StatelessWidget {
-  final String initial; // For the profile icon (e.g., "MF")
-  final String name;   // For the user's full name
-  final String email;  // For the user's email
 
-  const AccountScreen({
-    super.key,
-    required this.initial,
-    required this.name,
-    required this.email,
-  });
+class AccountScreen extends StatelessWidget {
+  const AccountScreen({super.key});
+
+  String _getInitials(String fullName) {
+    List<String> parts = fullName.split(' ');
+    String initials = '';
+    if (parts.isNotEmpty) initials += parts[0][0].toUpperCase();
+    if (parts.length > 1) initials += parts[1][0].toUpperCase();
+    return initials.isNotEmpty ? initials : '?';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -34,7 +39,7 @@ class AccountScreen extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      initial,
+                      _getInitials(user.username),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -48,11 +53,11 @@ class AccountScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      user.username,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      email,
+                      user.email,
                       style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   ],
@@ -66,7 +71,10 @@ class AccountScreen extends StatelessWidget {
               title: const Text('Edit Profile'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                // Implement Edit Profile navigation or functionality
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditProfileScreen()),
+                );
               },
             ),
             ListTile(
