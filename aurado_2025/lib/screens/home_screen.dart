@@ -456,22 +456,45 @@ class _HomeScreenState extends State<HomeScreen> {
           NotificationScreen(),
         const AccountScreen(),
       ][_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.black,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Chatbot'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade400, // color of the box's top border
+              width: 1.0,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 5,
+              offset: const Offset(0, -1), // shadow above the nav bar
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          elevation: 0, // keep elevation 0 because container has shadow
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent, // already set on container
+          selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
+          unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
+            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Chatbot'),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
+            BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
+          ],
+        ),
       ),
+
+
     );
   }
 }

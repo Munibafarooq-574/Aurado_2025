@@ -3,11 +3,16 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
-import 'screens/home_screen.dart'; // Adjust to your dashboard or home screen
+import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/preference_screen.dart';
 import 'task_manager.dart';
-import 'screens/login_screen.dart'; // Your login screen
 import 'providers/user_provider.dart';
-// Notification permission request
+import 'providers/preferences_provider.dart';
+
+// =======================
+// Notification Permission
+// =======================
 Future<void> requestNotificationPermission() async {
   final status = await Permission.notification.status;
   if (status.isDenied || status.isPermanentlyDenied) {
@@ -21,9 +26,13 @@ FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final prefsProvider = PreferencesProvider();
+  await prefsProvider.loadPreferences();
+
   await requestNotificationPermission();
 
-  // Initialize timezone for scheduling notifications
+  // Initialize timezone for notifications
   tz.initializeTimeZones();
 
   // Notification settings for Android
@@ -37,91 +46,95 @@ void main() async {
   // Initialize the notifications plugin
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-  // Run the app wrapped with ChangeNotifierProvider for TaskManager
+  // Run the app with all providers, including prefsProvider
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => TaskManager()),
+        ChangeNotifierProvider(create: (_) => prefsProvider),
       ],
       child: const MyApp(),
     ),
   );
 }
 
-// Main App widget
+// =======================
+// Main App Widget
+// =======================
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
+    Color scaffoldBgColor = _fromHex(prefs.themeColor);
+
+
+    print('scaffoldBgColor: $scaffoldBgColor');
+    print('prefs.themeColor: ${prefs.themeColor}');
+
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'AuraDo',
+
       theme: ThemeData.light().copyWith(
-        primaryColor: const Color(0xFF800000),
+        primaryColor: scaffoldBgColor,
+        scaffoldBackgroundColor: scaffoldBgColor,
         cardTheme: CardThemeData(
           color: Colors.white,
           elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        scaffoldBackgroundColor: const Color(0xFFFBEEE6),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF800000),
+            backgroundColor: const Color(0xff800000),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFBEEE6),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xff800000),
           elevation: 0,
           titleTextStyle: TextStyle(
-            color: Colors.black,
+            color: const Color(0xff800000).computeLuminance() > 0.5 ? Colors.black : Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
+          iconTheme: IconThemeData(
+            color: const Color(0xff800000).computeLuminance() > 0.5 ? Colors.black : Colors.white,
+          ),
         ),
+
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: scaffoldBgColor,
+          selectedItemColor: const Color(0xff800000),
+          unselectedItemColor: Colors.black,
+        ),
+
       ),
-      darkTheme: ThemeData.dark().copyWith(
-        primaryColor: const Color(0xFF9B2C2C),
-        cardTheme: CardThemeData(
-          color: Colors.grey[900],
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        scaffoldBackgroundColor: const Color(0xFF1A1A1A),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF9B2C2C),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1A1A1A),
-          elevation: 0,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      themeMode: ThemeMode.system,
+
+
+      // Dark theme
+      darkTheme: null,
+
+      // Theme mode from PreferencesProvider
+      themeMode: ThemeMode.light,
+
+      // Navigation
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
         '/login': (context) => const LoginScreen(),
-        // add other routes here if you want
+        '/preferences': (context) => const PreferenceScreen(),
       },
     );
+  }
+
+  Color _fromHex(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
   }
 }

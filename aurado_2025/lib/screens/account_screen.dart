@@ -6,7 +6,7 @@ import 'terms_of_services_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'signout_screen.dart';
 import 'FAQs_screen.dart';
-import ' preference_screen.dart';
+import 'preference_screen.dart';
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 

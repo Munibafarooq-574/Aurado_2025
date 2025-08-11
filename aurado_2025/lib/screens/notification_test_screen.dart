@@ -1,6 +1,6 @@
 // lib/notification_screen.dart
 import 'package:flutter/material.dart';
-import 'package:aurado_2025/notification_service.dart'; // Make sure the path is correct
+import 'package:aurado_2025/services/notification_service.dart'; // Make sure the path is correct
 import 'package:intl/intl.dart';
 
 class NotificationScreen extends StatelessWidget {
