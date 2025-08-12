@@ -3,6 +3,8 @@
 import 'dart:math'; // Added for Random
 import 'package:flutter/material.dart';
 import 'signup_screen.dart'; // Verified import path
+import '../providers/preferences_provider.dart';
+import 'package:provider/provider.dart';
 
 class GetStarted extends StatefulWidget {
   const GetStarted({super.key});
@@ -14,6 +16,14 @@ class GetStarted extends StatefulWidget {
 class _GetStartedState extends State<GetStarted> with SingleTickerProviderStateMixin {
   late AnimationController _starController;
   late Animation<double> _starAnimation;
+
+
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
 
   @override
   void initState() {
@@ -36,11 +46,13 @@ class _GetStartedState extends State<GetStarted> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor;
     final size = MediaQuery.of(context).size; // Get screen size dynamically
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFFBEEE6), // Matched with SplashScreen background
+        decoration:  BoxDecoration(
+          color: hexToColor(backgroundColorHex), // Matched with SplashScreen background
         ),
         child: Stack(
           children: [

@@ -1,3 +1,5 @@
+import 'package:aurado_2025/screens/forget_password1.dart';
+import 'package:aurado_2025/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/preference_screen.dart';
+import 'screens/screen_1.dart';
 import 'task_manager.dart';
 import 'providers/user_provider.dart';
 import 'providers/preferences_provider.dart';
@@ -124,9 +127,12 @@ class MyApp extends StatelessWidget {
       // Navigation
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const Screen1(),
+        '/signup': (context) => const SignUpScreen(),
         '/login': (context) => const LoginScreen(),
+        '/home': (context) => const HomeScreen(),
         '/preferences': (context) => const PreferenceScreen(),
+        '/forget_password': (context) => ForgetPasswordScreen(),
       },
     );
   }

@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'otp_screen.dart'; // Adjust path as needed for navigation back to OTP screen
 import 'successfulNewPass_screen.dart'; // Import the new success screen
-
+import '../providers/preferences_provider.dart';
+import 'package:provider/provider.dart';
 void main() {
   runApp(MyApp());
 }
@@ -49,10 +50,27 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     int length = password.length;
 
     if (length < 6) return 'Weak';
-    if (length < 10 && (hasUppercase || hasDigits || hasSpecial)) return 'Medium';
-    if (length >= 10 && hasUppercase && hasDigits && hasSpecial) return 'Strong';
 
-    return 'Weak';
+    int conditionsMet = 0;
+    if (hasUppercase) conditionsMet++;
+    if (hasDigits) conditionsMet++;
+    if (hasSpecial) conditionsMet++;
+
+    if (length >= 8 && conditionsMet == 3) {
+      return 'Strong';
+    } else if (length >= 6 && conditionsMet >= 2) {
+      return 'Medium';
+    } else {
+      return 'Weak';
+    }
+  }
+
+
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
   }
 
   void _resetPassword() {
@@ -108,10 +126,12 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     bool isNewPasswordEmpty = _newPasswordController.text.isEmpty;
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor;
 
     return Scaffold(
       body: Container(
-        color: Color(0xFFF5E8D4), // Matching beige background from OTP screen
+        color: hexToColor(backgroundColorHex),
         padding: EdgeInsets.all(16.0),
         child: SafeArea(
           child: Column(

@@ -1,6 +1,9 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../providers/preferences_provider.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,6 +20,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -24,6 +35,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Color _strengthColor = Colors.red;
   bool _isPasswordStrong = false;
   bool _passwordsMatch = true;
+
 
   void _checkPasswordStrength(String password) {
     if (password.isEmpty) {
@@ -68,9 +80,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor; // e.g., '#fbeee6'
     return Scaffold(
       body: Container(
-        color: const Color(0xFFFBEEE6),
+        color: hexToColor(backgroundColorHex),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
@@ -258,6 +272,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 if (_isPasswordStrong && _passwordsMatch) {
+                                  Provider.of<UserProvider>(context, listen: false).updateUser(
+                                    username: _nameController.text.trim(),
+                                    email: _emailController.text.trim(),
+                                  );
                                   // Dummy signup logic (replace with Firebase Auth)
                                   Navigator.pushReplacementNamed(context, '/home');
                                 } else {

@@ -1,6 +1,8 @@
 // ignore_for_file: library_private_types_in_public_api, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/preferences_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,11 +17,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor;
     return Scaffold(
       body: Container(
-        color: const Color(0xFFFBEEE6),
+        color: hexToColor(backgroundColorHex),
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,9 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: TextButton(
                                   onPressed: () {
                                     // Placeholder for ForgetPasswordScreen
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Forget Password Screen not implemented')),
-                                    );
+                                    Navigator.pushNamed(context, '/forget_password');
+
                                   },
                                   child: const Text(
                                     'Forget Password?',

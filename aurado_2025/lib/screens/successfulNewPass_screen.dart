@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'newpassword_screen.dart'; // Adjust path as needed for navigation back to NewPasswordScreen
 import 'login_screen.dart'; // Import the LoginScreen
+import 'package:provider/provider.dart';
+import '../providers/preferences_provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -19,14 +21,24 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
+Color hexToColor(String hexString) {
+  final buffer = StringBuffer();
+  if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+  buffer.write(hexString.replaceFirst('#', ''));
+  return Color(int.parse(buffer.toString(), radix: 16));
+}
+
 class SuccessfulNewPassScreen extends StatelessWidget {
   const SuccessfulNewPassScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor;
     return Scaffold(
       body: Container(
-        color: Color(0xFFF5E8D4), // Matching beige background from NewPasswordScreen
+        color:  hexToColor(backgroundColorHex),
         padding: EdgeInsets.all(16.0),
         child: SafeArea(
           child: Column(

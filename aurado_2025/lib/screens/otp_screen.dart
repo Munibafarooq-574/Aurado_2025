@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'forget_password1.dart'; // Adjust path as needed
 import 'newpassword_screen.dart'; // Import the NewPasswordScreen
 import 'dart:async';
+import '../providers/preferences_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -36,6 +38,15 @@ class _OTPScreenState extends State<OTPScreen> {
   final _correctOTP = '1234'; // Example correct OTP, replace with dynamic OTP if needed
   final int _maxAttempts = 5; // Set max attempts to 5
   bool _otpExpired = false; // Track OTP expiration
+
+
+
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
 
   @override
   void initState() {
@@ -153,9 +164,12 @@ class _OTPScreenState extends State<OTPScreen> {
       return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
     }
 
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor;
+
     return Scaffold(
       body: Container(
-        color: Color(0xFFF5E8D4),
+        color: hexToColor(backgroundColorHex),
         padding: EdgeInsets.all(16.0),
         child: SafeArea(
           child: Column(

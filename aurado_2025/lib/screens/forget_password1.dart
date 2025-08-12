@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart'; // Import the LoginScreen
 import 'otp_screen.dart'; // Import the OTPScreen
+import '../providers/preferences_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,11 +32,20 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
 
+
+  Color hexToColor(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
   @override
   Widget build(BuildContext context) {
+    final preferencesProvider = Provider.of<PreferencesProvider>(context);
+    final backgroundColorHex = preferencesProvider.themeColor;
     return Scaffold(
       body: Container(
-        color: Color(0xFFF5E8D4), // Light beige background similar to the image
+        color: hexToColor(backgroundColorHex),
         padding: EdgeInsets.all(16.0),
         child: SafeArea(
           child: Column(

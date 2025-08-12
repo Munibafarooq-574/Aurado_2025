@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
 import 'get_started.dart';
-
+import '../providers/preferences_provider.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,6 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _scaleAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+
 
   @override
   void initState() {
@@ -72,8 +75,10 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6),
+      backgroundColor: fromHex(prefs.themeColor),
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {

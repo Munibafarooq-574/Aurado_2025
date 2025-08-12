@@ -213,11 +213,10 @@ class PreferenceScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close success dialog
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const AccountScreen()),
               );
-
             },
             child: const Text('OK'),
           ),
