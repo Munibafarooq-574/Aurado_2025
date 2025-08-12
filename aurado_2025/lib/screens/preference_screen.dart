@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/preferences_provider.dart';
 import 'account_screen.dart';
+import '../constants/ color_utils.dart';
+
 
 class PreferenceScreen extends StatelessWidget {
   const PreferenceScreen({super.key});
@@ -21,7 +23,7 @@ class PreferenceScreen extends StatelessWidget {
             letterSpacing: 1.1,
           ),
         ),
-        backgroundColor: const Color(0xFFfbeee6),
+        backgroundColor: fromHex(prefs.themeColor),
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),

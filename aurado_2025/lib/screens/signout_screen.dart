@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
+import '../providers/preferences_provider.dart';
 
 class SignoutScreen extends StatelessWidget {
   const SignoutScreen({super.key});
@@ -34,6 +37,7 @@ class SignoutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,  // This removes the back button
@@ -46,7 +50,7 @@ class SignoutScreen extends StatelessWidget {
             letterSpacing: 1.1,
           ),
         ),
-        backgroundColor: const Color(0xFFfbeee6),
+        backgroundColor: fromHex(prefs.themeColor),
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/ color_utils.dart';
 import '../models/task.dart';
+import '../providers/preferences_provider.dart';
 import '../task_manager.dart';
 import 'edit_task_screen.dart';
 
@@ -36,11 +38,11 @@ class _MissedScreenState extends State<MissedScreen> {
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
-
+    final prefs = Provider.of<PreferencesProvider>(context);
     final missedTasks = Provider.of<TaskManager>(context).getMissedTasks();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6),
+      backgroundColor: fromHex(prefs.themeColor),
       body: SafeArea(
         child: Stack(
           children: [

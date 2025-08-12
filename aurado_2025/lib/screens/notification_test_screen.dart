@@ -2,16 +2,19 @@
 import 'package:flutter/material.dart';
 import 'package:aurado_2025/services/notification_service.dart'; // Make sure the path is correct
 import 'package:intl/intl.dart';
-
+import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
+import '../providers/preferences_provider.dart';
 class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     final now = DateTime.now();
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
     return Scaffold(
-      backgroundColor: Color(0xFFFBEEE6),
+      backgroundColor: fromHex(prefs.themeColor),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xff800000),
+           backgroundColor: scaffoldBgColor,  // <-- dynamic color from preferences
           elevation: 0,
           titleTextStyle: TextStyle(
             color: const Color(0xff800000).computeLuminance() > 0.5 ? Colors.black : Colors.white,

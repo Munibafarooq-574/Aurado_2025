@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
+import '../providers/preferences_provider.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -16,12 +20,12 @@ class PrivacyPolicyScreen extends StatelessWidget {
             letterSpacing: 1.1,
           ),
         ),
-        backgroundColor: const Color(0xFFfbeee6), // Matches body background
+        backgroundColor: fromHex(prefs.themeColor), // Matches body background
         elevation: 0, // Removes shadow to avoid box-like appearance
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      backgroundColor: const Color(0xFFfbeee6),
+      backgroundColor: fromHex(prefs.themeColor),
       body: SafeArea(
         child: Stack(
           children: [

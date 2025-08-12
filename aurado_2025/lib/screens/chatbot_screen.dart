@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
+import '../providers/preferences_provider.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({Key? key}) : super(key: key);
@@ -55,13 +58,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     final now = DateTime.now();
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6),
+      backgroundColor: fromHex(prefs.themeColor),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -82,12 +86,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.normal,
                       color: Colors.black54,
+
                     ),
                   ),
+
+
                 ],
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 25),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: Text(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
+import '../providers/preferences_provider.dart';
 import 'edit_task_screen.dart';
 import '../models/task.dart' as task_model;
 import 'package:aurado_2025/task_manager.dart';
@@ -10,10 +12,10 @@ class UpcomingScreen extends StatefulWidget {
   final bool showSuccessMessage;
 
   const UpcomingScreen({
-    Key? key,
+    super.key,
     this.newTask,
     this.showSuccessMessage = false,
-  }) : super(key: key);
+  });
 
   @override
   _UpcomingScreenState createState() => _UpcomingScreenState();
@@ -49,9 +51,9 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
     final date = DateFormat('MMMM d, y').format(now); // "August 7, 2025"
     final time = DateFormat('hh:mm a').format(now); // "01:48 PM"
     final upcomingTasks = taskManager.getUpcomingTasks();
-
+    final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6),
+      backgroundColor: fromHex(prefs.themeColor),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

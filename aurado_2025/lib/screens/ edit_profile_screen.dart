@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
 import '../providers/user_provider.dart';
+import '../providers/preferences_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
 
@@ -171,6 +173,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -183,7 +186,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             letterSpacing: 1.1,
           ),
         ),
-        backgroundColor: const Color(0xFFfbeee6),
+        backgroundColor: fromHex(prefs.themeColor),
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),

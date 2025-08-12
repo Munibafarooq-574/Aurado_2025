@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
 import '../models/task.dart';
 import 'package:aurado_2025/task_manager.dart';
+import '../providers/preferences_provider.dart';
 import '../widgets/custom_task_card.dart';
 
 class HealthScreen extends StatefulWidget {
@@ -36,6 +38,7 @@ class _HealthScreenState extends State<HealthScreen> {
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
+    final prefs = Provider.of<PreferencesProvider>(context);
 
     // 🔽 Filter tasks based on dropdown
     List<TaskModel> workTasks = taskManager.getTasksByCategory('Health');
@@ -55,13 +58,13 @@ class _HealthScreenState extends State<HealthScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBEEE6),
+      backgroundColor: fromHex(prefs.themeColor),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFFFBEEE6),
+        backgroundColor: fromHex(prefs.themeColor),
         title: const Text(
           'Health Tasks',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black,),
         ),
         centerTitle: true,
         actions: [

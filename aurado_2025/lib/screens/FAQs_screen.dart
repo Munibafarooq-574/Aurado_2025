@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
+import '../providers/preferences_provider.dart';
 
 class FAQsScreen extends StatefulWidget {
   @override
@@ -17,9 +20,10 @@ class _FAQsScreenState extends State<FAQsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFfbeee6),
+        backgroundColor: fromHex(prefs.themeColor),
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),
