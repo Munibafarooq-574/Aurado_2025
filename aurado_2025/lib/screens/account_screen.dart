@@ -4,6 +4,7 @@ import '../constants/ color_utils.dart';
 import '../providers/preferences_provider.dart';
 import '../providers/user_provider.dart';
 import ' edit_profile_screen.dart';
+import 'notification_settings_screen.dart';
 import 'terms_of_services_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'signout_screen.dart';
@@ -14,7 +15,8 @@ class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
   String _getInitials(String fullName) {
-    List<String> parts = fullName.split(' ');
+    if (fullName.trim().isEmpty) return '?';
+    List<String> parts = fullName.trim().split(' ').where((p) => p.isNotEmpty).toList();
     String initials = '';
     if (parts.isNotEmpty) initials += parts[0][0].toUpperCase();
     if (parts.length > 1) initials += parts[1][0].toUpperCase();
@@ -26,20 +28,7 @@ class AccountScreen extends StatelessWidget {
     final user = Provider.of<UserProvider>(context).user;
     final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Account',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: Colors.black,
-          ),
-        ),
-        backgroundColor: fromHex(prefs.themeColor),
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -100,7 +89,10 @@ class AccountScreen extends StatelessWidget {
                 title: const Text('Notifications Setting'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // Implement Notifications navigation or functionality
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                  );
                 },
               ),
               ListTile(

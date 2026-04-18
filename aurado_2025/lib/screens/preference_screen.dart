@@ -212,11 +212,7 @@ class PreferenceScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close success dialog
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const AccountScreen()),
-              );
+              Navigator.pop(context); // ✅ Sirf dialog band karo
             },
             child: const Text('OK'),
           ),

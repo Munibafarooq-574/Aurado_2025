@@ -21,6 +21,7 @@ import '../models/user.dart';
 import '../models/chart_data.dart';
 import 'package:aurado_2025/task_manager.dart';
 import '../providers/user_provider.dart';  // Import UserProvider
+import '../providers/preferences_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,7 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _getInitials(String fullName) {
-    List<String> parts = fullName.split(' ');
+    if (fullName.trim().isEmpty) return '?';
+    List<String> parts = fullName.trim().split(' ').where((p) => p.isNotEmpty).toList();
     String initials = '';
     if (parts.isNotEmpty) initials += parts[0][0].toUpperCase();
     if (parts.length > 1) initials += parts[1][0].toUpperCase();
@@ -73,28 +75,41 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboard(BuildContext context, User user) {
+    final username = user.username ?? '';
+    String initial = _getInitials(username);
     return Consumer<TaskManager>(
       builder: (context, taskManager, child) {
         final tasks = taskManager.tasks;
+        final prefs = Provider.of<PreferencesProvider>(context);
 
-        // Filter tasks based on search query
-        final filteredTasks = _searchQuery.isEmpty
-            ? tasks
-            : tasks.where((task) =>
-        (task.title?.toLowerCase() ?? '')
-            .contains(_searchQuery.toLowerCase()) ||
-            (task.description?.toLowerCase() ?? '')
-                .contains(_searchQuery.toLowerCase()))
-            .toList();
+// ✅ Search — saare tasks mein se
+        List<TaskModel> searchResults = [];
+        if (_searchQuery.isNotEmpty) {
+          searchResults = tasks.where((task) {
+            return task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                task.description.toLowerCase().contains(_searchQuery.toLowerCase());
+          }).toList();
+        }
 
-        final categoryCounts = getCategoryCounts(tasks);
+// ✅ Priority filter
+        List<TaskModel> filteredTasks = prefs.taskPriority == 'All'
+            ? List.from(tasks)
+            : tasks.where((t) => t.priority == prefs.taskPriority).toList();
+
+// ✅ Sorting
+        if (prefs.taskSorting == 'By Due Date') {
+          filteredTasks.sort((a, b) => a.dueDateTime.compareTo(b.dueDateTime));
+        } else if (prefs.taskSorting == 'By Priority') {
+          const order = {'High': 0, 'Medium': 1, 'Low': 2};
+          filteredTasks.sort((a, b) =>
+              (order[a.priority] ?? 2).compareTo(order[b.priority] ?? 2));
+        }
+
+// ✅ Bar chart aur progress chart saare tasks pe
+        final categoryCounts = getCategoryCounts(List.from(tasks));
         final barChartData = categoryCounts.entries
             .map((e) => ChartData(e.key, e.value.toDouble()))
             .toList();
-
-        final username = user.username;
-        String initial = username.isNotEmpty ? _getInitials(username) : 'U';
-
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
@@ -197,9 +212,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Search Results
                 if (_searchQuery.isNotEmpty) ...[
-                  const Text('Search Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Search Results',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  filteredTasks.isEmpty
+                  searchResults.isEmpty
                       ? const Center(
                     child: Text(
                       'No tasks found',
@@ -209,15 +225,31 @@ class _HomeScreenState extends State<HomeScreen> {
                       : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredTasks.length,
+                    itemCount: searchResults.length,
                     itemBuilder: (context, index) {
-                      final task = filteredTasks[index];
+                      final task = searchResults[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
-                          title: Text(task.title ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(task.description ?? ''),
-                          trailing: Text(task.category ?? ''),
+                          leading: const Icon(Icons.task_alt, color: Color(0xFF800000)),
+                          title: Text(task.title,
+                              style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(task.description),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF800000).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              task.category ?? 'No Category',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF800000),
+                              ),
+                            ),
+
+                          ),
                           onTap: () {
                             switch (task.category) {
                               case 'Work':
@@ -264,6 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text('Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
                       _buildTaskCard('Today', 'assets/Today.png'),
@@ -303,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Progress Chart
                 const Text('Tasks Status Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                ProgressChart(tasks: tasks),
+                ProgressChart(tasks: List.from(tasks)),
               ],
             ),
           ),

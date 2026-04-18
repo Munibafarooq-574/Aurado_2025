@@ -1,11 +1,106 @@
-// lib/notification_screen.dart
 import 'package:flutter/material.dart';
-import 'package:aurado_2025/services/notification_service.dart'; // Make sure the path is correct
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../constants/ color_utils.dart';
 import '../providers/preferences_provider.dart';
-class NotificationScreen extends StatelessWidget {
+import '../services/notification_service.dart';
+import 'package:aurado_2025/task_manager.dart';
+import '../models/task.dart';
+
+class NotificationScreen extends StatefulWidget {
+  @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  // Real notification history list
+  final List<Map<String, dynamic>> _notificationHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _buildNotificationHistory();
+  }
+
+  void _buildNotificationHistory() {
+    final taskManager = Provider.of<TaskManager>(context, listen: false);
+    final tasks = taskManager.tasks;
+    final now = DateTime.now();
+
+    _notificationHistory.clear();
+
+    for (var task in tasks) {
+      // Missed tasks
+      if (!task.isCompleted && task.dueDateTime.isBefore(now)) {
+        _notificationHistory.add({
+          'title': 'Missed Task: ${task.title}',
+          'time': DateFormat('hh:mm a, MMM d, y').format(task.dueDateTime),
+          'type': 'missed',
+          'task': task,
+        });
+      }
+      // Due today
+      else if (!task.isCompleted &&
+          task.dueDateTime.day == now.day &&
+          task.dueDateTime.month == now.month &&
+          task.dueDateTime.year == now.year) {
+        _notificationHistory.add({
+          'title': 'Due Today: ${task.title}',
+          'time': DateFormat('hh:mm a, MMM d, y').format(task.dueDateTime),
+          'type': 'due',
+          'task': task,
+        });
+      }
+      // Upcoming tasks
+      else if (!task.isCompleted && task.dueDateTime.isAfter(now)) {
+        _notificationHistory.add({
+          'title': 'Upcoming: ${task.title}',
+          'time': DateFormat('hh:mm a, MMM d, y').format(task.dueDateTime),
+          'type': 'upcoming',
+          'task': task,
+        });
+      }
+      // Completed tasks
+      else if (task.isCompleted) {
+        _notificationHistory.add({
+          'title': 'Completed: ${task.title}',
+          'time': task.completedDateTime != null
+              ? DateFormat('hh:mm a, MMM d, y').format(task.completedDateTime!)
+              : 'N/A',
+          'type': 'completed',
+          'task': task,
+        });
+      }
+    }
+
+    // Sort by time descending
+    _notificationHistory.sort((a, b) {
+      final aTask = a['task'] as TaskModel;
+      final bTask = b['task'] as TaskModel;
+      return bTask.dueDateTime.compareTo(aTask.dueDateTime);
+    });
+  }
+
+  IconData _getIcon(String type) {
+    switch (type) {
+      case 'missed': return Icons.warning_amber_rounded;
+      case 'due': return Icons.today;
+      case 'upcoming': return Icons.upcoming;
+      case 'completed': return Icons.check_circle;
+      default: return Icons.notifications;
+    }
+  }
+
+  Color _getColor(String type) {
+    switch (type) {
+      case 'missed': return Colors.red;
+      case 'due': return Colors.orange;
+      case 'upcoming': return Colors.blue;
+      case 'completed': return Colors.green;
+      default: return const Color(0xFF800000);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
@@ -13,6 +108,7 @@ class NotificationScreen extends StatelessWidget {
     final day = DateFormat('EEEE').format(now);
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
+
     return Scaffold(
       backgroundColor: fromHex(prefs.themeColor),
       body: SingleChildScrollView(
@@ -22,62 +118,60 @@ class NotificationScreen extends StatelessWidget {
           children: [
             Text(
               'Date: $day, $date | Time: $time PKT',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.normal,
-                color: Colors.black54,
-              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
             ),
             const SizedBox(height: 20),
-            NotificationCard(
-              title: 'You have a new task assigned: Project Review',
-              time: '08:45 PM, Jul 19, 2025',
-            ),
-            NotificationCard(
-              title: 'Task Meeting Prep is due today at 5:00 PM',
-              time: '08:30 PM, Jul 19, 2025',
-            ),
-            NotificationCard(
-              title: 'Reminder: Submit Weekly Report by tomorrow.',
-              time: '08:15 PM, Jul 19, 2025',
-            ),
-            NotificationCard(
-              title: 'Task Client Call is scheduled for Monday.',
-              time: '07:55 PM, Jul 19, 2025',
-            ),
-            NotificationCard(
-              title: 'Reminder: Submit Weekly Report by tomorrow.',
-              time: '07:45 PM, Jul 19, 2025',
-            ),
+
+            // Real task notifications
+            if (_notificationHistory.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: Text(
+                    'No notifications yet.\nCreate tasks to see reminders here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              ..._notificationHistory.map((notif) => _NotificationCard(
+                title: notif['title'],
+                time: notif['time'],
+                type: notif['type'],
+                icon: _getIcon(notif['type']),
+                color: _getColor(notif['type']),
+                onMarkDone: () {
+                  final task = notif['task'] as TaskModel;
+                  Provider.of<TaskManager>(context, listen: false)
+                      .markTaskAsCompleted(task);
+                  setState(() => _buildNotificationHistory());
+                },
+                onDismiss: () {
+                  setState(() => _notificationHistory.remove(notif));
+                },
+              )),
+
             const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
                 onPressed: () async {
                   await NotificationService.cancelAllNotifications();
-
+                  setState(() => _notificationHistory.clear());
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('All notifications cleared.'),
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Color(0xFF800000),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF800000),
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text(
-                  'Clear All',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Text('Clear All',
+                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 30),
@@ -88,13 +182,23 @@ class NotificationScreen extends StatelessWidget {
   }
 }
 
-class NotificationCard extends StatelessWidget {
+class _NotificationCard extends StatelessWidget {
   final String title;
   final String time;
+  final String type;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onMarkDone;
+  final VoidCallback onDismiss;
 
-  const NotificationCard({
+  const _NotificationCard({
     required this.title,
     required this.time,
+    required this.type,
+    required this.icon,
+    required this.color,
+    required this.onMarkDone,
+    required this.onDismiss,
   });
 
   @override
@@ -110,70 +214,45 @@ class NotificationCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.notifications_active, color: Color(0xFF800000)),
+                Icon(icon, color: color),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  child: Text(title,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              time,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-            ),
+            Text(time, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
             const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CustomButton(label: 'View', onPressed: () {}),
-                CustomButton(label: 'Mark Done', onPressed: () {}),
-                CustomButton(label: 'Snooze', onPressed: () {}),
+                if (type != 'completed')
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onMarkDone,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF800000),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Mark Done', style: TextStyle(fontSize: 13)),
+                    ),
+                  ),
+                if (type != 'completed') const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onDismiss,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF800000)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Dismiss',
+                        style: TextStyle(fontSize: 13, color: Color(0xFF800000))),
+                  ),
+                ),
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class CustomButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-
-  const CustomButton({
-    required this.label,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 36,
-        margin: EdgeInsets.symmetric(horizontal: 4),
-        child: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF800000),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: EdgeInsets.zero,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(fontSize: 13),
-          ),
         ),
       ),
     );

@@ -3,7 +3,8 @@ import 'package:aurado_2025/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -34,9 +35,10 @@ void main() async {
   await prefsProvider.loadPreferences();
 
   await requestNotificationPermission();
-
-  // Initialize timezone for notifications
   tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Karachi'));
+  // Initialize timezone for notifications
+
 
   // Notification settings for Android
   const AndroidInitializationSettings initializationSettingsAndroid =

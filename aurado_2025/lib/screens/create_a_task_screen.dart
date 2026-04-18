@@ -3,14 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../main.dart';
-//import 'work_screen.dart';
-//import 'PersonalScreen.dart';
-//import 'HealthScreen.dart';
-//import 'ShoppingScreen.dart';
-//import 'HabitScreen.dart';
 import 'today_screen.dart';
 import 'UpcomingScreen.dart';
 import '../models/task.dart' as task_model;
+import '../services/notification_service.dart';
 
 
 
@@ -477,7 +473,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                             ),
                             // Inside showDialog's 'Save' button onPressed:
                             TextButton(
-                              onPressed: () {
+                              onPressed: () async {  // ✅ async add karo
                                 final updatedTask = task_model.TaskModel(
                                   id: widget.task?.id ?? UniqueKey().toString(),
                                   title: _titleController.text,
@@ -491,9 +487,28 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                                   minutesBefore: int.tryParse(_timerController.text) ?? 0,
                                 );
 
-                                Navigator.pop(context); // Close the dialog first
+                                // ✅ Notification schedule karo agar user ne enable kiya ho
+                                // ✅ try-catch ke saath notification schedule karo
+                                if (_notification && _selectedDateTime != null) {
+                                  int minutesBefore = int.tryParse(_timerController.text) ?? 0;
+                                  try {
+                                    await NotificationService.scheduleTaskNotification(
+                                      id: updatedTask.id.hashCode,
+                                      taskTitle: updatedTask.title,
+                                      dueDateTime: updatedTask.dueDateTime,
+                                      minutesBefore: minutesBefore,
+                                    );
+                                  } catch (e) {
+                                    print('⚠️ Notification error: $e');
+                                    // Error aaye toh bhi task save ho aur screen change ho
+                                  }
+                                }
+                                    // ✅ Provider mein task add karo
+                                widget.onTaskCreated(updatedTask);
 
-                                // Decide where to go based on due date:
+                                Navigator.pop(context); // Close dialog
+
+                                // Navigate karo
                                 final now = DateTime.now();
                                 final dueDate = _selectedDateTime!;
                                 final isToday = dueDate.year == now.year &&

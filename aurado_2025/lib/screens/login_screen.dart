@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/preferences_provider.dart';
-
+import '../providers/user_provider.dart';
+import '../models/user.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -181,7 +182,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if (_formKey.currentState!.validate()) {
-                                      // Dummy login logic (replace with Firebase Auth in real app)
+                                      // Set user data in provider before navigating
+                                      Provider.of<UserProvider>(context, listen: false).updateUser(
+                                        username: _emailController.text.split('@')[0],
+                                        email: _emailController.text,
+                                      );
                                       Navigator.pushReplacementNamed(context, '/home');
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
