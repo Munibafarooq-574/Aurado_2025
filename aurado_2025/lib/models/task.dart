@@ -38,7 +38,7 @@ class TaskModel {
         minutesBefore = other.minutesBefore,
         notification = other.notification,
         isCompleted = other.isCompleted,
-  completedDateTime = other.completedDateTime;
+        completedDateTime = other.completedDateTime;
 
   /// ✏️ Copy with optional new values (useful for editing tasks)
   TaskModel copyWith({

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/preferences_provider.dart';
+import 'package:aurado_2025/controller/chat_controller.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -269,14 +271,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState!.validate()) {
                                 if (_isPasswordStrong && _passwordsMatch) {
                                   Provider.of<UserProvider>(context, listen: false).updateUser(
                                     username: _nameController.text.trim(),
                                     email: _emailController.text.trim(),
                                   );
-                                  // Dummy signup logic (replace with Firebase Auth)
+
+                                  await ChatController().setCurrentUser(
+                                    _emailController.text.trim().toLowerCase(),
+                                  );
+
                                   Navigator.pushReplacementNamed(context, '/home');
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(

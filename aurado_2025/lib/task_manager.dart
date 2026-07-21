@@ -24,6 +24,32 @@ class TaskManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 🔍 NEW: chatbot ko task dhoondhne ke liye chahiye — title keyword se
+  // (case-insensitive, partial match). Sab se pehla matching task return
+  // karta hai, warna null.
+  TaskModel? findByTitle(String query) {
+    if (query.trim().isEmpty) return null;
+    final normalizedQuery = query.trim().toLowerCase();
+
+    // Pehle exact match try karo
+    for (final task in _tasks) {
+      if (task.title.toLowerCase() == normalizedQuery) {
+        return task;
+      }
+    }
+
+    // Phir partial/contains match try karo
+    for (final task in _tasks) {
+      if (task.title.toLowerCase().contains(normalizedQuery) ||
+          normalizedQuery.contains(task.title.toLowerCase())) {
+        return task;
+      }
+    }
+
+    print('TaskManager: findByTitle no match for "$query"');
+    return null;
+  }
+
   List<TaskModel> getMissedTasks() {
     final now = DateTime.now();
     final missed = _tasks.where((task) {
@@ -114,5 +140,10 @@ class TaskManager extends ChangeNotifier {
       print('TaskManager: Updated task "${oldTask.title}" to "${newTask.title}"');
       notifyListeners();
     }
+  }
+
+  void clearTasks() {
+    _tasks.clear();
+    notifyListeners();
   }
 }

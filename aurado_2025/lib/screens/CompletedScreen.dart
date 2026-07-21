@@ -105,7 +105,7 @@ class _CompletedScreenState extends State<CompletedScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           child: Column(
                             children:[
-                          // Select All checkbox row
+                              // Select All checkbox row
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -156,41 +156,43 @@ class _CompletedScreenState extends State<CompletedScreen> {
 
 
                               // List of tasks with checkboxes
-                           ...completedTasks.map((task) {
-                            final isSelected = selectedTasks.contains(task);
-                              // Debug print to verify completedDateTime value
-                              print('Task: ${task.title}, completed at: ${task.completedDateTime}');
+                              ...completedTasks.map((task) {
+                                final isSelected = selectedTasks.contains(task);
+                                // Debug print to verify completedDateTime value
+                                print('Task: ${task.title}, completed at: ${task.completedDateTime}');
 
-                              return TaskCardWithCheckbox(
-                                title: task.title,
-                                description: task.description,
-                                category: task.category!,
-                                priority: task.priority!,
-                                dueDateFormatted: DateFormat('EEEE, MMM d, yyyy - hh:mm a').format(task.dueDateTime) + ' PKT',
-                                repeat: task.repeat?.toString() ?? 'None',
-                                notification: task.notification == true ? 'Yes' : 'No',
-                                color: _getColorForTask(task).withOpacity(0.2),
-                                completionText: _getCompletionTimeText(task),
+                                return TaskCardWithCheckbox(
+                                  title: task.title,
+                                  description: task.description,
+                                  // 🔧 FIX: category/priority nullable hain — force '!' crash karta tha
+                                  // jab chatbot ya kahin aur se null category/priority wala task banta tha.
+                                  category: task.category ?? 'Uncategorized',
+                                  priority: task.priority ?? 'Normal',
+                                  dueDateFormatted: DateFormat('EEEE, MMM d, yyyy - hh:mm a').format(task.dueDateTime) + ' PKT',
+                                  repeat: task.repeat?.toString() ?? 'None',
+                                  notification: task.notification == true ? 'Yes' : 'No',
+                                  color: _getColorForTask(task).withOpacity(0.2),
+                                  completionText: _getCompletionTimeText(task),
                                   task: task,
-                                 isSelected: isSelected,
-                                 onCheckboxChanged: (bool? selected) {
-                                  setState(() {
-                                  if (selected == true) {
-                                    selectedTasks.add(task);
-                                      if (selectedTasks.length == completedTasks.length) {
-                                 selectAll = true;
+                                  isSelected: isSelected,
+                                  onCheckboxChanged: (bool? selected) {
+                                    setState(() {
+                                      if (selected == true) {
+                                        selectedTasks.add(task);
+                                        if (selectedTasks.length == completedTasks.length) {
+                                          selectAll = true;
+                                        }
+                                      } else {
+                                        selectedTasks.remove(task);
+                                        selectAll = false;
                                       }
-                                  } else {
-                                      selectedTasks.remove(task);
-                                       selectAll = false;
-                                       }
-                                     });
-                                     },
-                                onDelete: () {
-                                  Provider.of<TaskManager>(context, listen: false).removeTask(task);
-                                },
-                              );
-                            }).toList(),
+                                    });
+                                  },
+                                  onDelete: () {
+                                    Provider.of<TaskManager>(context, listen: false).removeTask(task);
+                                  },
+                                );
+                              }).toList(),
                             ],
                           ),
                         );
@@ -259,34 +261,34 @@ class _CompletedScreenState extends State<CompletedScreen> {
   }
 
 }
-  /// 🔷 Helper to show how long ago the task was completed
-  String _getCompletionTimeText(TaskModel task) {
-    final completedTime = task.completedDateTime ?? DateTime.now();
-    final difference = DateTime.now().difference(completedTime);
+/// 🔷 Helper to show how long ago the task was completed
+String _getCompletionTimeText(TaskModel task) {
+  final completedTime = task.completedDateTime ?? DateTime.now();
+  final difference = DateTime.now().difference(completedTime);
 
-    if (difference.inMinutes < 1) return 'Completed just now';
-    if (difference.inMinutes < 60) return 'Completed ${difference.inMinutes} mins ago';
-    if (difference.inHours < 24) return 'Completed ${difference.inHours} hrs ago';
-    return 'Completed ${difference.inDays} days ago';
-  }
+  if (difference.inMinutes < 1) return 'Completed just now';
+  if (difference.inMinutes < 60) return 'Completed ${difference.inMinutes} mins ago';
+  if (difference.inHours < 24) return 'Completed ${difference.inHours} hrs ago';
+  return 'Completed ${difference.inDays} days ago';
+}
 
-  /// 🔷 Helper to get task card color based on category
-  Color _getColorForTask(TaskModel task) {
-    switch (task.category) {
-      case 'Work':
-        return const Color(0xff6495ED); // Cornflower blue
-      case 'Personal':
-        return const Color(0xffD3D3D3); // Light gray
-      case 'Shopping':
-        return const Color(0xffEC9D41); // Orange
-      case 'Health':
-        return const Color(0xff90EE90); // Light green
-      case 'Habit':
-        return const Color(0xffFFD700); // Gold
-      default:
-        return const Color(0xffD3D3D3);
-    }
+/// 🔷 Helper to get task card color based on category
+Color _getColorForTask(TaskModel task) {
+  switch (task.category) {
+    case 'Work':
+      return const Color(0xff6495ED); // Cornflower blue
+    case 'Personal':
+      return const Color(0xffD3D3D3); // Light gray
+    case 'Shopping':
+      return const Color(0xffEC9D41); // Orange
+    case 'Health':
+      return const Color(0xff90EE90); // Light green
+    case 'Habit':
+      return const Color(0xffFFD700); // Gold
+    default:
+      return const Color(0xffD3D3D3);
   }
+}
 
 
 class TaskCardWithCheckbox  extends StatelessWidget {

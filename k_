@@ -1,0 +1,49 @@
+[33m3e62679[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Remove Groq API key
+[33mc05f963[m Update UI
+[33m16e95a0[m Enhance chatbot functionality and improve offline FAQ handling
+[33ma129a3b[m Fix user session issues and update chat/task management
+[33m0161238[m feat(auth): track current logged-in user and isolate chats per session
+[33m507247f[m fix null-check crash in completed tasks
+[33m36a95ec[m fix: improve chatbot stability and network handling
+[33mcd3c523[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: improve chatbot UI responsiveness and scrolling
+[33m8cf0951[m Improve task screens UI responsiveness and unify app bar design
+[33mf2557e9[m ix(android): add Gradle wrapper files
+[33m4ab4c34[m ix(android): add Gradle wrapper files
+[33mde6a8bc[m Updated
+[33m3d37cc9[m Initial commit
+[33m66ea329[m Initial commit
+[33mc4489b7[m Initial commit
+[33m4d60082[m Initial commit
+[33m68df6ca[m Initial commit
+[33m58a0b56[m Initial commit
+[33m7d3b5a9[m Initial commit
+[33m836e67d[m Initial commit
+[33m3bff367[m Initial commit
+[33m07759fd[m Initial commit
+[33mfdee24f[m Initial commit
+[33mf8f5cfa[m Initial commit
+[33m4036f93[m Initial commit
+[33m0722ee8[m Initial commit
+[33mc5fe144[m Initial commit
+[33mdc4e243[m Initial commit
+[33mc2674af[m Initial commit
+[33m1aa756b[m Initial commit
+[33m4d0d608[m Initial commit
+[33m20feb3a[m Initial commit
+[33ma1e0532[m Initial commit
+[33m3744915[m Initial commit
+[33m9127426[m Initial commit
+[33me879377[m Initial commit
+[33mf17f4b6[m Initial commit
+[33me344c0b[m Initial commit
+[33m7e6e48a[m Initial commit
+[33md464f97[m Initial commit
+[33m14414ca[m Initial commit
+[33mce1963d[m Initial commit
+[33mdf69144[m Initial commit
+[33me0f1f76[m Initial commit
+[33mae88911[m Initial commit
+[33md3bf427[m Initial commit 'Dashboard , create_a_task'
+[33m40a5a78[m Initial commit 'Dashboard'
+[33me79b5c5[m Initial commit 'Dashboard'
+[33m933d39a[m Initial commit

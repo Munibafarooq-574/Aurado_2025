@@ -28,9 +28,6 @@ class _UpcomingScreenState extends State<UpcomingScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.newTask != null) {
-        Provider.of<TaskManager>(context, listen: false).addTask(widget.newTask!);
-      }
       if (widget.showSuccessMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Task saved successfully")),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants/ color_utils.dart';
 import '../providers/preferences_provider.dart';
+import 'package:aurado_2025/controller/chat_controller.dart';
+import '../task_manager.dart';
 
 class SignoutScreen extends StatelessWidget {
   const SignoutScreen({super.key});
@@ -31,6 +33,11 @@ class SignoutScreen extends StatelessWidget {
 
     // If user confirmed sign out, navigate to login screen
     if (result == true) {
+
+      ChatController().clearCurrentUser();
+
+      TaskManager().clearTasks();
+
       Navigator.pushReplacementNamed(context, '/login');
     }
   }

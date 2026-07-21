@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/preferences_provider.dart';
 import '../providers/user_provider.dart';
-import '../models/user.dart';
+import 'package:aurado_2025/controller/chat_controller.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -180,13 +180,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
                                       // Set user data in provider before navigating
                                       Provider.of<UserProvider>(context, listen: false).updateUser(
                                         username: _emailController.text.split('@')[0],
-                                        email: _emailController.text,
+                                        email: _emailController.text.trim(),
                                       );
+
+                                      await ChatController().setCurrentUser(
+                                        _emailController.text.trim().toLowerCase(),
+                                      );
+
                                       Navigator.pushReplacementNamed(context, '/home');
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
