@@ -43,6 +43,23 @@ class _MissedScreenState extends State<MissedScreen> {
 
     return Scaffold(
       backgroundColor: fromHex(prefs.themeColor),
+      appBar: AppBar(
+        toolbarHeight: 60,
+        automaticallyImplyLeading: false,
+        backgroundColor: fromHex(prefs.themeColor),
+        centerTitle: true,
+        title: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            "Missed Tasks",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -51,11 +68,6 @@ class _MissedScreenState extends State<MissedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Missed Tasks',
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
                   Text(
                     'Date: $day, $date | Time: $time PKT',
                     style: TextStyle(
@@ -191,9 +203,12 @@ class _MissedScreenState extends State<MissedScreen> {
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
-                    shape: RoundedRectangleBorder(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    minimumSize: Size(
+                      MediaQuery.of(context).size.width * 0.85,
+                      50,
+                    ),
+                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),

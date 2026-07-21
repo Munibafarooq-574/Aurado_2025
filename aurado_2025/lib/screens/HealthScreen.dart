@@ -60,11 +60,19 @@ class _HealthScreenState extends State<HealthScreen> {
     return Scaffold(
       backgroundColor: fromHex(prefs.themeColor),
       appBar: AppBar(
+        toolbarHeight: 60,
         automaticallyImplyLeading: false,
         backgroundColor: fromHex(prefs.themeColor),
-        title: const Text(
-          'Health Tasks',
-          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black,),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: const Text(
+            'Health Tasks',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 22,
+            ),
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -119,7 +127,13 @@ class _HealthScreenState extends State<HealthScreen> {
             children: [
               Text(
                 'Date: $day, $date | Time: $time PKT',
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.black54,
+                ),
               ),
               const SizedBox(height: 10),
               // <-- Add this Text widget here -->
@@ -172,15 +186,25 @@ class _HealthScreenState extends State<HealthScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Center(
+              SizedBox(
+                //width: double.infinity,
+                width: MediaQuery.of(context).size.width * 0.85,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
-                    padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  child: const Text('Back', style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Back',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
             ],

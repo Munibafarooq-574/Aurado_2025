@@ -1,7 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../constants/ color_utils.dart';
 import '../models/task.dart';
+import '../providers/preferences_provider.dart';
 import '../task_manager.dart';
 import 'dart:async';
 
@@ -39,7 +41,29 @@ class _CompletedScreenState extends State<CompletedScreen> {
     final date = DateFormat('MMMM d, y').format(now);
     final time = DateFormat('hh:mm a').format(now);
 
+    final prefs = Provider.of<PreferencesProvider>(context);
+
     return Scaffold(
+      backgroundColor: fromHex(prefs.themeColor),
+
+      appBar: AppBar(
+        toolbarHeight: 60,
+        automaticallyImplyLeading: false,
+        backgroundColor: fromHex(prefs.themeColor),
+        centerTitle: true,
+        title: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            "Completed Tasks",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 22,
+            ),
+          ),
+        ),
+      ),
+
       body: SafeArea(
         child: Stack(
           children: [
@@ -48,11 +72,6 @@ class _CompletedScreenState extends State<CompletedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Completed Tasks',
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
                   Text(
                     'Date: $day, $date | Time: $time PKT',
                     style: TextStyle(
@@ -191,7 +210,11 @@ class _CompletedScreenState extends State<CompletedScreen> {
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF800000),
-                    padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    minimumSize: Size(
+                      MediaQuery.of(context).size.width * 0.85,
+                      50,
+                    ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   child: const Text('Back', style: TextStyle(color: Colors.white)),
